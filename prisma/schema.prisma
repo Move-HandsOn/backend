@@ -12,3 +12,182 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// User-related models
+model User {
+  id            String  @id @default(uuid())
+  name          String
+  email         String  @unique
+  password      String
+  profile_image String?
+  bio           String?
+  gender        String?
+
+  interests  UserInterest[]
+  activities Activity[]
+  comments   Comment[]
+  feed       Feed[]
+  groups     GroupMember[]
+  followers  Follower[]     @relation("UserFollowers")
+  following  Follower[]     @relation("UserFollowing")
+  events     Event[]
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+  Like       Like[]
+
+  @@map("users")
+}
+
+model UserInterest {
+  interest_id    Int
+  insterest_name String
+  interest_type  String
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  @@id([user_id, interest_id])
+  @@map("user_interests")
+}
+
+// Activity-related models
+model Activity {
+  id            Int      @id @default(autoincrement())
+  type          String
+  duration      Int // Duration of the activity in seconds
+  activity_date DateTime
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  comments Comment[]
+  feed     Feed[] // Feed entries related to the activity
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("activities")
+}
+
+model Comment {
+  id           Int    @id @default(autoincrement())
+  comment_text String
+
+  likes Like[]
+
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id])
+  activity_id Int
+  activity    Activity @relation(fields: [activity_id], references: [id])
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("comments")
+}
+
+model Like {
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  comment_id Int
+  comment    Comment @relation(fields: [comment_id], references: [id])
+
+  @@id([user_id, comment_id])
+  @@map("likes")
+}
+
+// Group-related models
+model Group {
+  id           Int            @id @default(autoincrement())
+  name         String
+  description  String
+  group_image  String?
+  members      GroupMember[]
+  feed         Feed[] // Feed entries related to the group
+  events       Event[] // Events associated with the group
+  group_events GroupOnEvent[] // Relationship for events
+
+  created_at DateTime @default(now())
+
+  @@map("groups")
+}
+
+model GroupMember {
+  group_id Int
+  user_id  String
+
+  group Group @relation(fields: [group_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id])
+
+  @@id([group_id, user_id])
+  @@map("group_members")
+}
+
+model Follower {
+  follower_id String
+  followed_id String
+
+  follower User @relation("UserFollowers", fields: [follower_id], references: [id])
+  followed User @relation("UserFollowing", fields: [followed_id], references: [id])
+
+  @@id([follower_id, followed_id])
+  @@map("followers")
+}
+
+// Event-related models
+model Event {
+  id                  Int      @id @default(autoincrement())
+  name                String
+  event_date          DateTime
+  group_id            Int?
+  address_street      String
+  address_number      String
+  address_city        String
+  address_state       String
+  address_cep         String
+  is_recurring        Boolean  @default(false)
+  recurrence_interval Int? // optional recurrence interval in days
+  start_time          DateTime
+  end_time            DateTime
+  description         String?
+
+  created_at DateTime @default(now())
+
+  is_public        Boolean        @default(false)
+  shared_in_groups GroupOnEvent[]
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+  group   Group? @relation(fields: [group_id], references: [id])
+
+  @@map("events")
+}
+
+model GroupOnEvent {
+  group_id Int
+  event_id Int
+
+  group Group @relation(fields: [group_id], references: [id])
+  event Event @relation(fields: [event_id], references: [id])
+
+  @@id([group_id, event_id])
+  @@map("groupsOnEvents")
+}
+
+// Feed model
+model Feed {
+  id           Int      @id @default(autoincrement())
+  post_content String
+  created_at   DateTime @default(now())
+
+  user_id     String
+  user        User      @relation(fields: [user_id], references: [id])
+  activity_id Int?
+  activity    Activity? @relation(fields: [activity_id], references: [id])
+  group_id    Int?
+  group       Group?    @relation(fields: [group_id], references: [id])
+
+  @@map("feeds")
+}
