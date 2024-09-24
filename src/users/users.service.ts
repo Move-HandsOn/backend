@@ -30,14 +30,16 @@ export class UsersService {
       throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
     }
 
-    const hashedPass = this.generateHash(updateUserDto.password);
+    const updateData = { ...updateUserDto };
+
+    if (updateUserDto.password) {
+      const hashedPass = this.generateHash(updateUserDto.password); // hash the password if present
+      updateData.password = hashedPass;
+    }
 
     try {
       return await this.prismaService.user.update({
-        data: {
-          ...updateUserDto,
-          password: hashedPass,
-        },
+        data: updateData,
         where: {
           id: user.id,
         },
