@@ -11,15 +11,16 @@ import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login-user.dto';
 import { RefreshTokenGuard } from './guards/jwt-refresh.guard';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from '../decorators/user.decorator';
 import { User } from '@prisma/client';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @UseGuards(LocalAuthGuard)
   async login(@Body() user: LoginDto) {
     return await this.authService.login(user);
   }
@@ -31,7 +32,6 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
   async logout(
     @Headers('Authorization') userToken: string,
     @Headers('refresh_token') refreshToken: string,

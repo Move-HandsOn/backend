@@ -54,7 +54,7 @@ export class AuthService {
 
   // updates the user's refresh token in the database
   async updateRefreshToken(userEmail: string, refreshToken: string) {
-    await this.usersService.updateUser(userEmail, { refreshToken });
+    await this.usersService.update(userEmail, { refreshToken });
   }
 
   // validates user credentials during login
@@ -63,29 +63,31 @@ export class AuthService {
 
     // compares the provided password with the hashed password stored in the database
     if (!user || !(await bcrypt.compare(userData.password, user.password))) {
-      throw new HttpException(
-        'Invalid email or password.',
-        HttpStatus.BAD_REQUEST
-      );
+      return null;
     }
 
     return user;
   }
 
   // handles user login, generating tokens after validation
-  async login(userData: LoginDto): Promise<{
-    accessToken: string;
-    refreshToken: string;
-  }> {
-    const userFound = await this.validateUser(userData);
+  async login(
+    userData: LoginDto
+  ): Promise<
+    { accessToken: string; refreshToken: string } | { message: string }
+  > {
+    const user = await this.validateUser(userData);
+
+    if (!user) {
+      return { message: 'Invalid email or password.' };
+    }
 
     const payload = {
-      sub: userFound.id,
-      email: userFound.email,
+      sub: user.id,
+      email: user.email,
     };
 
     const tokens = await this.generateTokens(payload); // Generates tokens
-    await this.updateRefreshToken(userFound.email, tokens.refreshToken); // Updates the refresh token in the database
+    await this.updateRefreshToken(user.email, tokens.refreshToken); // Updates the refresh token in the database
     return tokens;
   }
 
