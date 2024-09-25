@@ -10,4 +10,5 @@ export class CreateUserDto {
   bio?: string;
   gender?: string;
   interests?: string;
+  followers?:    number;
 }
