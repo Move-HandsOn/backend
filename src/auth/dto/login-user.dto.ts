@@ -6,10 +6,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateUserDto {
-  @IsNotEmpty({ message: 'Name can`t be empty' })
-  name: string;
-
+export class LoginDto {
   @IsNotEmpty({ message: 'Email can`t be empty' })
   @IsEmail({}, { message: 'Must be a valid email' })
   email: string;
@@ -25,10 +22,4 @@ export class CreateUserDto {
     At least 8 characters in length, but no more than 32.`,
   })
   password: string;
-
-  profile_image?: string;
-
-  @MaxLength(300, { message: 'Must have less then 300 characteres' })
-  bio?: string;
-  gender?: string;
-  refreshToken?: string;
+}
