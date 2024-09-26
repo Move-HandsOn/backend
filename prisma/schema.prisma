@@ -24,18 +24,19 @@ model User {
   gender        String?
   refreshToken  String?
 
-  interests  UserInterest[]
-  activities Activity[]
-  comments   Comment[]
-  feed       Feed[]
-  groups     GroupMember[]
-  followers  Follower[]     @relation("UserFollowers")
-  following  Follower[]     @relation("UserFollowing")
-  events     Event[]
+  interests         UserInterest[]
+  activities        Activity[]
+  comments          Comment[]
+  feed              Feed[]
+  groups            GroupMember[]
+  followers         Follower[]       @relation("UserFollowers")
+  following         Follower[]       @relation("UserFollowing")
+  events            Event[]
+  likesOnActivities LikeOnActivity[]
+  likesOnComments   LikeOnComment[]
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
-  Like       Like[]
 
   @@map("users")
 }
@@ -54,7 +55,7 @@ model UserInterest {
 
 // Activity-related models
 model Activity {
-  id            Int      @id @default(autoincrement())
+  id            String   @id @default(uuid())
   type          String
   duration      Int // Duration of the activity in seconds
   activity_date DateTime
@@ -64,6 +65,7 @@ model Activity {
 
   comments Comment[]
   feed     Feed[] // Feed entries related to the activity
+  likes    LikeOnActivity[]
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -72,14 +74,14 @@ model Activity {
 }
 
 model Comment {
-  id           Int    @id @default(autoincrement())
+  id           String @id @default(uuid())
   comment_text String
 
-  likes Like[]
+  likes LikeOnComment[]
 
   user_id     String
   user        User     @relation(fields: [user_id], references: [id])
-  activity_id Int
+  activity_id String
   activity    Activity @relation(fields: [activity_id], references: [id])
 
   updated_at DateTime @updatedAt
@@ -88,20 +90,31 @@ model Comment {
   @@map("comments")
 }
 
-model Like {
+model LikeOnComment {
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
 
-  comment_id Int
+  comment_id String
   comment    Comment @relation(fields: [comment_id], references: [id])
 
   @@id([user_id, comment_id])
-  @@map("likes")
+  @@map("likesOnComments")
+}
+
+model LikeOnActivity {
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  activity_id String
+  activity    Activity @relation(fields: [activity_id], references: [id])
+
+  @@id([user_id, activity_id])
+  @@map("likesOnActivities")
 }
 
 // Group-related models
 model Group {
-  id           Int            @id @default(autoincrement())
+  id           String         @id @default(uuid())
   name         String
   description  String
   group_image  String?
@@ -116,7 +129,7 @@ model Group {
 }
 
 model GroupMember {
-  group_id Int
+  group_id String
   user_id  String
 
   group Group @relation(fields: [group_id], references: [id])
@@ -139,10 +152,9 @@ model Follower {
 
 // Event-related models
 model Event {
-  id                  Int      @id @default(autoincrement())
+  id                  String   @id @default(uuid())
   name                String
   event_date          DateTime
-  group_id            Int?
   address_street      String
   address_number      String
   address_city        String
@@ -159,16 +171,17 @@ model Event {
   is_public        Boolean        @default(false)
   shared_in_groups GroupOnEvent[]
 
-  user_id String
-  user    User   @relation(fields: [user_id], references: [id])
-  group   Group? @relation(fields: [group_id], references: [id])
+  user_id  String
+  user     User    @relation(fields: [user_id], references: [id])
+  group_id String?
+  group    Group?  @relation(fields: [group_id], references: [id])
 
   @@map("events")
 }
 
 model GroupOnEvent {
-  group_id Int
-  event_id Int
+  group_id String
+  event_id String
 
   group Group @relation(fields: [group_id], references: [id])
   event Event @relation(fields: [event_id], references: [id])
@@ -179,15 +192,15 @@ model GroupOnEvent {
 
 // Feed model
 model Feed {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   post_content String
   created_at   DateTime @default(now())
 
   user_id     String
   user        User      @relation(fields: [user_id], references: [id])
-  activity_id Int?
+  activity_id String?
   activity    Activity? @relation(fields: [activity_id], references: [id])
-  group_id    Int?
+  group_id    String?
   group       Group?    @relation(fields: [group_id], references: [id])
 
   @@map("feeds")
