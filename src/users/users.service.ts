@@ -104,5 +104,3 @@ export class UsersService {
 
   generateHash(password: string): string {
     return bcrypt.hashSync(password, 10);
-  }
-}

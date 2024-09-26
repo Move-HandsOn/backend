@@ -32,4 +32,3 @@ export class CreateUserDto {
   bio?: string;
   gender?: string;
   refreshToken?: string;
-}
