@@ -22,7 +22,7 @@ export class UsersController {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     this.usersService.create({
       ...createUserDto,
-      password: hashedPassword
+      password: hashedPassword,
     });
     return { message: 'User created successfully!' };
   }
