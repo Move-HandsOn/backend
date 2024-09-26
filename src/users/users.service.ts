@@ -27,8 +27,29 @@ export class UsersService {
     return newUser;
   }
 
-  async findOne(id: string) {
-    return await this.findUserById(id);
+  async getAllUserData(id: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profile_image: true,
+        bio: true,
+        gender: true,
+        interests: true,
+        activities: true,
+        feed: true,
+        groups: true,
+        followers: true,
+        following: true,
+        events: true,
+      },
+    });
+
+    return user;
   }
 
   async remove(id: string) {

@@ -38,7 +38,7 @@ export class UsersController {
 
   @Get('profile')
   async findOne(@GetUser() user: User, @Res() res: Response) {
-    const userFound = await this.usersService.findUserById(user.id);
+    const userFound = await this.usersService.getAllUserData(user.id);
 
     if (!userFound) {
       return res.status(HttpStatus.NOT_FOUND).json({
@@ -46,8 +46,7 @@ export class UsersController {
       });
     }
 
-    const userPresenter = new UserPresenter(user);
-    return res.status(HttpStatus.OK).json(userPresenter.toResponse());
+    return res.status(HttpStatus.OK).json(userFound);
   }
 
   @Patch('profile')
