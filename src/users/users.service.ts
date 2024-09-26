@@ -1,118 +1,105 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  create(createUserDto: CreateUserDto) {}
+  async create(createUserDto: CreateUserDto) {
+    const user = await this.findUserByEmail(createUserDto.email);
 
-  findAll() {
-    return `This action returns all users`;
+    if (user) {
+      return null;
+    }
+
+    const hashedPass = this.generateHash(createUserDto.password);
+
+    const newUser = await this.prismaService.user.create({
+      data: {
+        ...createUserDto,
+        password: hashedPass,
+      },
+    });
+
+    return newUser;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async getAllUserData(id: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profile_image: true,
+        bio: true,
+        gender: true,
+        interests: true,
+        activities: true,
+        feed: true,
+        groups: true,
+        followers: true,
+        following: true,
+        events: true,
+      },
+    });
+
+    return user;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    await this.prismaService.user.delete({
+      where: {
+        id,
+      },
+    });
   }
 
-  async updateUser(email: string, updateUserDto: UpdateUserDto) {
+  async update(email: string, updateUserDto: UpdateUserDto) {
     const user = await this.findUserByEmail(email);
 
     if (!user) {
-      throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
+      return null;
     }
 
     const updateData = { ...updateUserDto };
 
     if (updateUserDto.password) {
-      const hashedPass = this.generateHash(updateUserDto.password); // hash the password if present
+      const hashedPass = this.generateHash(updateUserDto.password);
       updateData.password = hashedPass;
     }
 
-    try {
-      return await this.prismaService.user.update({
-        data: updateData,
-        where: {
-          id: user.id,
-        },
-      });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new HttpException(
-          'Database error or invalid query',
-          HttpStatus.BAD_REQUEST
-        );
-      }
-
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+    return await this.prismaService.user.update({
+      data: updateData,
+      where: {
+        id: user.id,
+      },
+    });
   }
 
   async findUserByEmail(email: string) {
-    try {
-      const user = await this.prismaService.user.findUnique({
-        where: {
-          email,
-        },
-      });
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+    });
 
-      if (!user) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-      }
-
-      return user;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new HttpException(
-          'Database error or invalid query',
-          HttpStatus.BAD_REQUEST
-        );
-      }
-
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+    return user;
   }
 
   async findUserById(id: string) {
-    try {
-      const user = await this.prismaService.user.findUnique({
-        where: {
-          id,
-        },
-      });
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+    });
 
-      if (!user) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-      }
-
-      return user;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new HttpException(
-          'Database error or invalid query',
-          HttpStatus.BAD_REQUEST
-        );
-      }
-
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+    return user;
   }
 
   generateHash(password: string): string {

@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -14,17 +14,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: User) {
-    const user = await this.usersService.findUserById(payload.id);
+  async validate(payload: { sub: string; email: string }) {
+    const user = await this.usersService.findUserById(payload.sub);
 
     if (!user) {
       throw new NotFoundException('User not found.');
     }
 
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    };
+    const {
+      password: _,
+      refreshToken,
+      updated_at,
+      created_at,
+      ...userPresenter
+    } = user;
+
+    return userPresenter;
   }
 }

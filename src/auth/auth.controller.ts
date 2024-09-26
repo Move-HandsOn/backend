@@ -14,11 +14,13 @@ import { RefreshTokenGuard } from './guards/jwt-refresh.guard';
 import { GetUser } from '../decorators/user.decorator';
 import { User } from '@prisma/client';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { Public } from '../decorators/public.decorator';
 
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @UseGuards(LocalAuthGuard)
   async login(@Body() user: LoginDto) {
