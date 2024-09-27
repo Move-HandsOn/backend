@@ -6,12 +6,11 @@ import {
   Patch,
   Param,
   Delete,
-  NotFoundException,
+  HttpCode
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as bcrypt from 'bcrypt';
 
 @Controller('users')
 export class UsersController {
@@ -19,12 +18,8 @@ export class UsersController {
 
   @Post()
   async create_user(@Body() createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    this.usersService.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
-    return { message: 'User created successfully!' };
+    const user = await this.usersService.create(createUserDto);
+    return { user };
   }
 
   @Get()
@@ -42,9 +37,9 @@ export class UsersController {
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
-
+  @HttpCode(204)
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.usersService.remove(id);
+    await this.usersService.remove(id);
   }
 }
