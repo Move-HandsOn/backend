@@ -31,8 +31,5 @@ export class CreateUserDto {
   @MaxLength(300, { message: 'Must have less then 300 characteres' })
   bio?: string;
   gender?: string;
-
-  interests?: string;
-  followers?:    number;
   refreshToken?: string;
 }
