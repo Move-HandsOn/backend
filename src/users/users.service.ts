@@ -6,37 +6,102 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const user = await this.prisma.user.create({
+    const user = await this.findUserByEmail(createUserDto.email);
+
+    if (user) {
+      return null;
+    }
+
+    const hashedPass = this.generateHash(createUserDto.password);
+
+    const newUser = await this.prismaService.user.create({
       data: {
         ...createUserDto,
-        password: hashedPassword,
+        password: hashedPass,
       },
     });
-    delete user.password;
+
+    return newUser;
+  }
+
+  async getAllUserData(id: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profile_image: true,
+        bio: true,
+        gender: true,
+        interests: true,
+        activities: true,
+        feed: true,
+        groups: true,
+        followers: true,
+        following: true,
+        events: true,
+      },
+    });
+
     return user;
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
-
-  async findOne(id: string) {
-    return await this.prisma.user.findUnique({
-      where: { id },
-    });
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
   async remove(id: string) {
-    return await this.prisma.user.delete({
-      where: { id },
+    await this.prismaService.user.delete({
+      where: {
+        id,
+      },
     });
   }
-}
+
+  async update(email: string, updateUserDto: UpdateUserDto) {
+    const user = await this.findUserByEmail(email);
+
+    if (!user) {
+      return null;
+    }
+
+    const updateData = { ...updateUserDto };
+
+    if (updateUserDto.password) {
+      const hashedPass = this.generateHash(updateUserDto.password);
+      updateData.password = hashedPass;
+    }
+
+    return await this.prismaService.user.update({
+      data: updateData,
+      where: {
+        id: user.id,
+      },
+    });
+  }
+
+  async findUserByEmail(email: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    return user;
+  }
+
+  async findUserById(id: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    return user;
+  }
+
+  generateHash(password: string): string {
+    return bcrypt.hashSync(password, 10);
+  }
