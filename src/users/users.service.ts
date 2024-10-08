@@ -3,10 +3,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly jwtService: JwtService
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const user = await this.findUserByEmail(createUserDto.email);
@@ -100,6 +104,24 @@ export class UsersService {
     });
 
     return user;
+  }
+
+  async changePassword(recoveryToken: string, password: string) {
+    const user = await this.prismaService.user.findFirst({
+      where: {
+        recoveryToken,
+      },
+    });
+
+    const isValid = await this.jwtService.verifyAsync(recoveryToken, {
+      secret: process.env.JWT_SECRET,
+    });
+
+    if (!isValid) return null;
+
+    user.recoveryToken = null;
+
+    return await this.update(user.email, { ...user, password });
   }
 
   generateHash(password: string): string {

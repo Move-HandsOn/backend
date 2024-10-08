@@ -7,6 +7,8 @@ import {
   Delete,
   Res,
   HttpStatus,
+  BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,6 +18,7 @@ import { User } from '@prisma/client';
 import { Response } from 'express';
 import { Public } from 'src/decorators/public.decorator';
 import { UserPresenter } from './presenter/user.presenter';
+import { ChangePasswordDto } from './dto/changePasswordDto';
 
 @Controller()
 export class UsersController {
@@ -73,8 +76,29 @@ export class UsersController {
   @Delete('profile')
   async remove(@GetUser() user: Partial<User>, @Res() res: Response) {
     await this.usersService.remove(user.id);
-    return res
-      .status(HttpStatus.NO_CONTENT)
-      .json({ messgae: 'Account successfully deleted.' });
+    return res.status(HttpStatus.NO_CONTENT).json();
+  }
+
+  @Public()
+  @Patch('reset-password')
+  async resetPassword(
+    @Query('token') token: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Res() res: Response
+  ) {
+    if (changePasswordDto.password !== changePasswordDto.passwordConfirmation)
+      throw new BadRequestException({ message: 'Passwords do not match' });
+
+    const passwordChanged = await this.usersService.changePassword(
+      token,
+      changePasswordDto.password
+    );
+
+    if (!passwordChanged)
+      throw new BadRequestException({ message: 'Token is invalid.' });
+
+    return res.status(HttpStatus.OK).json({
+      message: 'Password changed successfully.',
+    });
   }
 }
