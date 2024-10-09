@@ -22,7 +22,9 @@ model User {
   profile_image String?
   bio           String?
   gender        String?
-  refreshToken  String?
+
+  refreshToken  String? @unique
+  recoveryToken String? @unique
 
   interests         UserInterest[]
   activities        Activity[]

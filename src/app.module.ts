@@ -5,9 +5,17 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { ConfigModule } from '@nestjs/config';
+import { MailModule } from './mail/mail.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    AuthModule,
+    ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
+    MailModule,
+  ],
   providers: [
     {
       provide: APP_GUARD,
