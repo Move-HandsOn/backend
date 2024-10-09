@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -36,6 +33,9 @@ model User {
   events            Event[]
   likesOnActivities LikeOnActivity[]
   likesOnComments   LikeOnComment[]
+  searchFilters     SearchFilter[]   // Inversa da relação de SearchFilter
+
+  groupRequests     GroupRequest[]   // Inversa da relação de GroupRequest
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -61,10 +61,17 @@ model Activity {
   type          String
   duration      Int // Duration of the activity in seconds
   activity_date DateTime
+  description   String?
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
-
+  
+  group_id String?
+  group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  
+  post_type String   // 'profile', 'group', 'private'
+  
+  media    ActivityMedia[]
   comments Comment[]
   feed     Feed[] // Feed entries related to the activity
   likes    LikeOnActivity[]
@@ -73,6 +80,15 @@ model Activity {
   created_at DateTime @default(now())
 
   @@map("activities")
+}
+
+model ActivityMedia {
+  id         String   @id @default(uuid())
+  media_url  String
+  activity_id String
+  activity   Activity @relation(fields: [activity_id], references: [id])
+
+  @@map("activity_media")
 }
 
 model Comment {
@@ -93,25 +109,36 @@ model Comment {
 }
 
 model LikeOnComment {
-  user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  id        String   @id @default(uuid())
+  commentId String
+  userId    String
 
-  comment_id String
-  comment    Comment @relation(fields: [comment_id], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  comment Comment @relation(fields: [commentId], references: [id])
 
-  @@id([user_id, comment_id])
-  @@map("likesOnComments")
+  @@map("like_on_comments")
 }
 
 model LikeOnActivity {
-  user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  id         String   @id @default(uuid())
+  activityId String
+  userId     String
 
-  activity_id String
-  activity    Activity @relation(fields: [activity_id], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  activity Activity @relation(fields: [activityId], references: [id])
 
-  @@id([user_id, activity_id])
-  @@map("likesOnActivities")
+  @@map("like_on_activities")
+}
+
+model SearchFilter {
+  id         String   @id @default(uuid())
+  filterName String
+  filterType String
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("search_filters")
 }
 
 // Group-related models
@@ -124,8 +151,11 @@ model Group {
   feed         Feed[] // Feed entries related to the group
   events       Event[] // Events associated with the group
   group_events GroupOnEvent[] // Relationship for events
+  activities   Activity[]     // Inversa da relação de Activity
 
   created_at DateTime @default(now())
+
+  groupRequests GroupRequest[] // Inversa da relação de GroupRequest
 
   @@map("groups")
 }
@@ -139,6 +169,18 @@ model GroupMember {
 
   @@id([group_id, user_id])
   @@map("group_members")
+}
+
+model GroupRequest {
+  id       String   @id @default(uuid())
+  groupId  String
+  userId   String
+  status   String   @default("pending") 
+
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("group_requests")
 }
 
 model Follower {
