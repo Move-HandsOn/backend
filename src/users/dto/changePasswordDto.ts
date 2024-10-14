@@ -1,6 +1,13 @@
-import { MinLength, MaxLength, Matches, IsNotEmpty } from 'class-validator';
+import {
+  MinLength,
+  MaxLength,
+  Matches,
+  IsNotEmpty,
+  IsString,
+} from 'class-validator';
 
 export class ChangePasswordDto {
+  @IsString({ message: 'Password must be a string.' })
   @IsNotEmpty({ message: 'Password can`t be empty' })
   @MinLength(6, { message: 'Must have at least 6 characteres' })
   @MaxLength(32, { message: 'Must have less then 32 characteres' })
@@ -13,6 +20,7 @@ export class ChangePasswordDto {
   })
   password: string;
 
+  @IsString({ message: 'Password confirmation must be a string.' })
   @IsNotEmpty({ message: 'Password can`t be empty' })
   @MinLength(6, { message: 'Must have at least 6 characteres' })
   @MaxLength(32, { message: 'Must have less then 32 characteres' })
