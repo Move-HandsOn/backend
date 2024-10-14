@@ -55,7 +55,7 @@ export class UsersController {
     );
 
     if (!updatedUser) {
-      throw new NotFoundException('User not found.');
+      throw new NotFoundException('User not found or email already in use.');
     }
 
     const userPresenter = new UserPresenter(updatedUser);
