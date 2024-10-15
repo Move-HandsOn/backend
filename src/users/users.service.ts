@@ -71,6 +71,16 @@ export class UsersService {
       return null;
     }
 
+    if (updateUserDto.email && updateUserDto.email !== email) {
+      const existingEmail = await this.prismaService.user.findUnique({
+        where: { email: updateUserDto.email },
+      });
+
+      if (existingEmail) {
+        return null;
+      }
+    }
+
     const updateData = { ...updateUserDto };
 
     if (updateUserDto.password) {
