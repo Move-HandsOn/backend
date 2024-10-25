@@ -36,12 +36,11 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('logout')
   async logout(
-    @Headers('Authorization') userToken: string,
-    @GetUser() user: User
+    @Headers('Authorization') userToken: string
   ) {
     const tokenData = await this.authService.decryptToken(userToken);
 
-    await this.authService.logout(tokenData.email, user.refreshToken);
+    await this.authService.logout(tokenData.email);
     return;
   }
 }
