@@ -27,7 +27,10 @@ export class UsersService {
       return null;
     }
 
-    const uploadedFileUrl = await this.supabaseService.upload(file);
+    let uploadedFileUrl: string | undefined = undefined;
+    if (file) {
+      uploadedFileUrl = await this.supabaseService.upload(file);
+    }
 
     const hashedPass = this.generateHash(createUserDto.password);
 
@@ -127,7 +130,7 @@ export class UsersService {
     }
 
     if (file) {
-      await this.handleProfileImageUpdate(user, updateData, file);
+      updateData.profile_image = await this.handleProfileImageUpdate(user, file);
     }
 
     return updateData;
@@ -135,7 +138,6 @@ export class UsersService {
 
   private async handleProfileImageUpdate(
     user: User,
-    updateData: any,
     file: FileUploadDTO
   ) {
     const deletePromise = this.supabaseService.delete(user.profile_image);
@@ -147,7 +149,7 @@ export class UsersService {
       uploadPromise,
     ]);
 
-    updateData.profile_image = uploadedFileUrl;
+    return uploadedFileUrl;
   }
 
   async findUserByEmail(email: string) {
