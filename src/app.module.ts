@@ -8,6 +8,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { MailModule } from './mail/mail.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { GroupsModule } from './groups/groups.module';
 import { ActivitiesModule } from './activities/activities.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { ActivitiesModule } from './activities/activities.module';
     MailModule,
     SupabaseModule,
     ActivitiesModule,
+    GroupsModule,
   ],
   providers: [
     {
