@@ -23,6 +23,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
   async login(@Body() user: LoginDto) {
     return await this.authService.login(user);
   }
@@ -33,15 +34,14 @@ export class AuthController {
     return this.authService.refreshAccess(user.email, user.refreshToken);
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async logout(
-    @Headers('Authorization') userToken: string,
-    @Headers('refresh_token') refreshToken: string
+    @Headers('Authorization') userToken: string
   ) {
     const tokenData = await this.authService.decryptToken(userToken);
 
-    await this.authService.logout(tokenData.email, refreshToken);
+    await this.authService.logout(tokenData.email);
     return;
   }
 }

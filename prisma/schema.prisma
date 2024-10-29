@@ -33,9 +33,9 @@ model User {
   events            Event[]
   likesOnActivities LikeOnActivity[]
   likesOnComments   LikeOnComment[]
-  searchFilters     SearchFilter[]   // Inversa da relação de SearchFilter
+  searchFilters     SearchFilter[] // Inversa da relação de SearchFilter
 
-  groupRequests     GroupRequest[]   // Inversa da relação de GroupRequest
+  groupRequests GroupRequest[] // Inversa da relação de GroupRequest
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -58,19 +58,21 @@ model UserInterest {
 // Activity-related models
 model Activity {
   id            String   @id @default(uuid())
-  type          String
   duration      Int // Duration of the activity in seconds
   activity_date DateTime
   description   String?
 
+  post_type String // 'profile', 'group', 'private'
+
+  category_id Int
+  category    ActivityCategory @relation(fields: [category_id], references: [id])
+
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
-  
+
   group_id String?
   group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  
-  post_type String   // 'profile', 'group', 'private'
-  
+
   media    ActivityMedia[]
   comments Comment[]
   feed     Feed[] // Feed entries related to the activity
@@ -83,12 +85,20 @@ model Activity {
 }
 
 model ActivityMedia {
-  id         String   @id @default(uuid())
-  media_url  String
+  id          String   @id @default(uuid())
+  media_url   String
   activity_id String
-  activity   Activity @relation(fields: [activity_id], references: [id])
+  activity    Activity @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
   @@map("activity_media")
+}
+
+model ActivityCategory {
+  id            Int        @id @default(autoincrement())
+  category_name String
+  activities    Activity[]
+
+  @@map("activities_categories")
 }
 
 model Comment {
@@ -100,7 +110,7 @@ model Comment {
   user_id     String
   user        User     @relation(fields: [user_id], references: [id])
   activity_id String
-  activity    Activity @relation(fields: [activity_id], references: [id])
+  activity    Activity @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -109,34 +119,34 @@ model Comment {
 }
 
 model LikeOnComment {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   commentId String
   userId    String
 
   user    User    @relation(fields: [userId], references: [id])
-  comment Comment @relation(fields: [commentId], references: [id])
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@map("like_on_comments")
 }
 
 model LikeOnActivity {
-  id         String   @id @default(uuid())
+  id         String @id @default(uuid())
   activityId String
   userId     String
 
   user     User     @relation(fields: [userId], references: [id])
-  activity Activity @relation(fields: [activityId], references: [id])
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
   @@map("like_on_activities")
 }
 
 model SearchFilter {
-  id         String   @id @default(uuid())
+  id         String @id @default(uuid())
   filterName String
   filterType String
 
   userId String
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   @@map("search_filters")
 }
@@ -151,7 +161,7 @@ model Group {
   feed         Feed[] // Feed entries related to the group
   events       Event[] // Events associated with the group
   group_events GroupOnEvent[] // Relationship for events
-  activities   Activity[]     // Inversa da relação de Activity
+  activities   Activity[] // Inversa da relação de Activity
 
   created_at DateTime @default(now())
 
@@ -172,10 +182,10 @@ model GroupMember {
 }
 
 model GroupRequest {
-  id       String   @id @default(uuid())
-  groupId  String
-  userId   String
-  status   String   @default("pending") 
+  id      String @id @default(uuid())
+  groupId String
+  userId  String
+  status  String @default("pending")
 
   group Group @relation(fields: [groupId], references: [id])
   user  User  @relation(fields: [userId], references: [id])
@@ -243,7 +253,7 @@ model Feed {
   user_id     String
   user        User      @relation(fields: [user_id], references: [id])
   activity_id String?
-  activity    Activity? @relation(fields: [activity_id], references: [id])
+  activity    Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
   group_id    String?
   group       Group?    @relation(fields: [group_id], references: [id])
 
