@@ -63,8 +63,6 @@ model Activity {
   description   String?
   post_type     String // 'profile', 'group', 'private'
 
-  post_type String // 'profile', 'group', 'private'
-
   category_id Int
   category    ActivityCategory @relation(fields: [category_id], references: [id])
 
