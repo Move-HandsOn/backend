@@ -58,7 +58,6 @@ export class UsersService {
         bio: true,
         gender: true,
         interests: true,
-        activities: true,
         feed: true,
         groups: true,
         followers: true,

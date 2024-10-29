@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  seed     = "ts-node ./prisma/seed.ts"
 }
 
 datasource db {
@@ -61,8 +62,7 @@ model Activity {
   duration      Int // Duration of the activity in seconds
   activity_date DateTime
   description   String?
-
-  post_type String // 'profile', 'group', 'private'
+  post_type     String // 'profile', 'group', 'private'
 
   category_id Int
   category    ActivityCategory @relation(fields: [category_id], references: [id])
