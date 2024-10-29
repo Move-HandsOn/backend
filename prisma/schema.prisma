@@ -63,6 +63,11 @@ model Activity {
   description   String?
   post_type     String // 'profile', 'group', 'private'
 
+  post_type String // 'profile', 'group', 'private'
+
+  category_id Int
+  category    ActivityCategory @relation(fields: [category_id], references: [id])
+
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
 
@@ -84,9 +89,17 @@ model ActivityMedia {
   id          String   @id @default(uuid())
   media_url   String
   activity_id String
-  activity    Activity @relation(fields: [activity_id], references: [id])
+  activity    Activity @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
   @@map("activity_media")
+}
+
+model ActivityCategory {
+  id            Int        @id @default(autoincrement())
+  category_name String
+  activities    Activity[]
+
+  @@map("activities_categories")
 }
 
 model Comment {
@@ -98,7 +111,7 @@ model Comment {
   user_id     String
   user        User     @relation(fields: [user_id], references: [id])
   activity_id String
-  activity    Activity @relation(fields: [activity_id], references: [id])
+  activity    Activity @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -112,7 +125,7 @@ model LikeOnComment {
   userId    String
 
   user    User    @relation(fields: [userId], references: [id])
-  comment Comment @relation(fields: [commentId], references: [id])
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@map("like_on_comments")
 }
@@ -123,7 +136,7 @@ model LikeOnActivity {
   userId     String
 
   user     User     @relation(fields: [userId], references: [id])
-  activity Activity @relation(fields: [activityId], references: [id])
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
   @@map("like_on_activities")
 }
@@ -241,7 +254,7 @@ model Feed {
   user_id     String
   user        User      @relation(fields: [user_id], references: [id])
   activity_id String?
-  activity    Activity? @relation(fields: [activity_id], references: [id])
+  activity    Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
   group_id    String?
   group       Group?    @relation(fields: [group_id], references: [id])
 

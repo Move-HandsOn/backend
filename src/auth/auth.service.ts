@@ -121,9 +121,9 @@ export class AuthService {
   }
 
   // logs out the user by invalidating the refresh token
-  async logout(userEmail: string, refreshToken: string) {
+  async logout(userEmail: string) {
     if (userEmail) {
-      return await this.updateRefreshToken(userEmail, refreshToken); // sets the refresh token to null or empty
+      return await this.updateRefreshToken(userEmail, null); // sets the refresh token to null or empty
     }
   }
 }
