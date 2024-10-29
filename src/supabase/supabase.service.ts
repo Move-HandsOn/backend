@@ -37,6 +37,13 @@ export class SupabaseService {
     return imgUrl;
   }
 
+  async uploadMany(files: FileUploadDTO[]) {
+    const uploadPromises = files.map(file => this.upload(file));
+    const imgUrls = await Promise.all(uploadPromises);
+    return imgUrls;
+}
+
+
   async delete(imgUrl: string) {
     const fileName = imgUrl.split('/').pop();
     const { error } = await this.supabase.storage
@@ -45,6 +52,19 @@ export class SupabaseService {
 
     if (error) {
       throw new BadRequestException('Error deleting image. Please try again.');
+    }
+
+    return;
+  }
+
+  async deleteMany(imgUrls: string[]) {
+    const fileNames = imgUrls.map(url => url.split('/').pop());
+    const { error } = await this.supabase.storage
+        .from('move')
+        .remove(fileNames);
+
+    if (error) {
+        throw new BadRequestException('Error deleting images. Please try again.');
     }
 
     return;
