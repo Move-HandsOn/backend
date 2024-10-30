@@ -63,7 +63,7 @@ model Activity {
   category    ActivityCategory @relation(fields: [category_id], references: [id])
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   group_id String?
   group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)

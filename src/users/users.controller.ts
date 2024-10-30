@@ -79,10 +79,11 @@ export class UsersController {
     return userPresenter.toResponse();
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete('profile')
   async remove(@GetUser() user: User) {
     await this.usersService.remove(user.id);
-    return { message: 'User deleted successfully' };
+    return;
   }
 
   @Public()
