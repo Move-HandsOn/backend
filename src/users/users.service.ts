@@ -48,8 +48,8 @@ export class UsersService {
   async getAllUserData(id: string) {
     const user = await this.prismaService.user.findUnique({
       where: {
-        id,
-      },
+          id,
+        },
       select: {
         id: true,
         name: true,
@@ -57,6 +57,13 @@ export class UsersService {
         profile_image: true,
         bio: true,
         gender: true,
+        activities: {
+          include: {
+            media: { select: { media_url: true } },
+            comments: true,
+            likes: true,
+          }
+        },
         interests: true,
         feed: true,
         groups: true,
@@ -66,8 +73,79 @@ export class UsersService {
       },
     });
 
-    return user;
+    if (!user) {
+      return null;
+    }
+
+    const followerCount = user.followers.length;
+    const followingCount = user.following.length;
+    const groupCount = user.groups.length;
+    const activityCount = user.activities.length;
+
+    const { averageDaily, weeklyProgress, weekdayDuration} = this.calculateActivityStats(user.activities);
+
+    const activities = user.activities.map(activity => ({
+      ...activity,
+      media: activity.media.map(media => media.media_url),
+  }));
+
+    return {
+        ...user,
+        activities,
+        followerCount,
+        followingCount,
+        groupCount,
+        activityCount,
+        averageDaily,
+        weeklyProgress,
+        weekdayDuration,
+    };
   }
+
+  calculateActivityStats(activities: Array<{ activity_date: Date, duration: number }>) {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    const recentActivities = activities.filter(({ activity_date }) => {
+        return activity_date >= sevenDaysAgo && activity_date <= today;
+    });
+
+    const dailyDurations = recentActivities.reduce((acc, { activity_date, duration }) => {
+        const day = activity_date.toISOString().split('T')[0];
+        acc[day] = (acc[day] || 0) + duration;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const averageDaily =
+        Object.values(dailyDurations).reduce((sum, duration) => sum + duration, 0) /
+        Object.keys(dailyDurations).length;
+
+    const weeklyProgress = Object.entries(dailyDurations).reduce((acc, [day, duration]) => {
+        const date = new Date(day);
+        const weekStart = new Date(date.setDate(date.getDate() - date.getDay())).toISOString().slice(0, 10);
+        acc[weekStart] = (acc[weekStart] || 0) + duration;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const weekdayDurationsValues = Object.entries(dailyDurations).reduce((acc, [day, duration]) => {
+        const weekday = new Date(day).toLocaleString('pt-BR', { weekday: 'short' });
+        acc[weekday] = (acc[weekday] || 0) + duration;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const weekdayDuration = Object.entries(weekdayDurationsValues).map(([day, hours]) => ({
+        day,
+        hours,
+    }));
+
+    return {
+        weekdayDuration,
+        dailyDurations,
+        averageDaily,
+        weeklyProgress,
+    };
+}
 
   async remove(id: string) {
     await this.prismaService.user.delete({
@@ -108,7 +186,6 @@ export class UsersService {
     });
   }
 
-  // validation to ensure at least one field is present in the update
   private hasUpdate(
     updateUserDto: UpdateUserDto,
     file?: FileUploadDTO
@@ -116,7 +193,6 @@ export class UsersService {
     return Object.keys(updateUserDto).length > 0 || !!file;
   }
 
-  // function to prepare update data for updating
   private async prepareUpdateData(
     user: User,
     updateUserDto: UpdateUserDto,
@@ -139,7 +215,12 @@ export class UsersService {
     user: User,
     file: FileUploadDTO
   ) {
-    const deletePromise = this.supabaseService.delete(user.profile_image);
+
+    let deletePromise: Promise<void> | undefined;
+
+    if (user.profile_image) {
+      deletePromise = this.supabaseService.delete(user.profile_image);
+    }
     const uploadPromise = this.supabaseService.upload(file);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
