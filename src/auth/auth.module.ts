@@ -15,7 +15,6 @@ import { SupabaseModule } from 'src/supabase/supabase.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '2h' },
     }),
     SupabaseModule,
   ],

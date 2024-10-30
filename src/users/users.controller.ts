@@ -49,7 +49,6 @@ export class UsersController {
 
   @Get('profile')
   async findOne(@GetUser() user: User) {
-    console.log(user)
     const userFound = await this.usersService.getAllUserData(user.id);
 
     if (!userFound) {
