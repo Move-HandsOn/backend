@@ -38,6 +38,9 @@ export class SupabaseService {
   }
 
   async uploadMany(files: FileUploadDTO[]) {
+    if(files.length > 2) {
+      throw new BadRequestException('The maximum number of images per post is 2.');
+    }
     const uploadPromises = files.map(file => this.upload(file));
     const imgUrls = await Promise.all(uploadPromises);
     return imgUrls;
