@@ -19,7 +19,6 @@ export class ActivitiesController {
 
   @Get()
   async findAll(@GetUser() user: User) {
-    console.log(user)
     const activities = await this.activitiesService.findAll(user.id);
 
     if(!activities){

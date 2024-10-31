@@ -6,7 +6,6 @@ import { FileUploadDTO } from 'src/supabase/dto/upload.dto';
 
 @Injectable()
 export class ActivitiesService {
-
   constructor(
     private readonly prismaService: PrismaService,
     private readonly supabaseService: SupabaseService
@@ -35,7 +34,6 @@ export class ActivitiesService {
       category_id: category.id,
     };
 
-    // using transactions to guarantee the atomicity of operations
     const activity = await this.prismaService.$transaction(async (prisma) => {
 
       const createdActivity = await prisma.activity.create({
@@ -60,7 +58,7 @@ export class ActivitiesService {
         timeout: 30000,
     });
 
-    return activity;
+    return await this.findOne( activity.id, userId);
   }
 
   async findAll(userId: string) {
@@ -82,7 +80,6 @@ export class ActivitiesService {
     if (!activities) {
       return null;
     }
-
 
     return activities;
   }
@@ -128,7 +125,11 @@ export class ActivitiesService {
               user_id: userId
           }
       });
-      await this.supabaseService.deleteMany(mediaUrls);
+
+      if (mediaUrls.length > 0) {
+        await this.supabaseService.deleteMany(mediaUrls);
+      }
+
     }, {
       timeout: 30000,
     });
@@ -137,6 +138,6 @@ export class ActivitiesService {
   }
 
   normalizeString(str: string) {
-    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // removes diacritical marks
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 }

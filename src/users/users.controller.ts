@@ -49,7 +49,6 @@ export class UsersController {
 
   @Get('profile')
   async findOne(@GetUser() user: User) {
-    console.log(user)
     const userFound = await this.usersService.getAllUserData(user.id);
 
     if (!userFound) {
@@ -80,10 +79,11 @@ export class UsersController {
     return userPresenter.toResponse();
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete('profile')
   async remove(@GetUser() user: User) {
     await this.usersService.remove(user.id);
-    return { message: 'User deleted successfully' };
+    return;
   }
 
   @Public()

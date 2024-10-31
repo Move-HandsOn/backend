@@ -16,23 +16,21 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     @Inject(forwardRef(() => UsersService))
-    private readonly usersService: UsersService // injects the UsersService, allowing for circular dependency
+    private readonly usersService: UsersService
   ) {}
 
-  // generates both access and refresh tokens
   async generateTokens(payload: AuthDto): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
-    // generates both tokens asynchronously
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
-          email: payload.email, // includes email in the token payload
-          sub: payload.sub, // includes user ID (subject)
+          email: payload.email,
+          sub: payload.sub,
         },
         {
-          expiresIn: '2h', // access token expires in 2 hours
+          expiresIn: '180s',
         }
       ),
       this.jwtService.signAsync(
@@ -41,7 +39,7 @@ export class AuthService {
           sub: payload.sub,
         },
         {
-          expiresIn: '90d', // refresh token expires in 90 days
+          expiresIn: '90d',
         }
       ),
     ]);
@@ -52,16 +50,13 @@ export class AuthService {
     };
   }
 
-  // updates the user's refresh token in the database
   async updateRefreshToken(userEmail: string, refreshToken: string) {
     await this.usersService.update(userEmail, { refreshToken });
   }
 
-  // validates user credentials during login
   async validateUser(userData: LoginDto) {
     const user = await this.usersService.findUserByEmail(userData.email);
 
-    // compares the provided password with the hashed password stored in the database
     if (!user || !(await bcrypt.compare(userData.password, user.password))) {
       return null;
     }
@@ -69,7 +64,6 @@ export class AuthService {
     return user;
   }
 
-  // handles user login, generating tokens after validation
   async login(
     userData: LoginDto
   ): Promise<
@@ -86,24 +80,21 @@ export class AuthService {
       email: user.email,
     };
 
-    const tokens = await this.generateTokens(payload); // Generates tokens
-    await this.updateRefreshToken(user.email, tokens.refreshToken); // Updates the refresh token in the database
+    const tokens = await this.generateTokens(payload);
+    await this.updateRefreshToken(user.email, tokens.refreshToken);
     return tokens;
   }
 
-  // decrypts the token and returns the payload data
   async decryptToken(bearerToken: string): Promise<AuthDto> {
     const token = bearerToken.replace('Bearer', '').trim();
-    const tokenData = await this.jwtService.verifyAsync(token); // Verifies the token and returns its payload
+    const tokenData = await this.jwtService.verifyAsync(token);
 
     return tokenData;
   }
 
-  // updates the access token using the refresh token
   async refreshAccess(userEmail: string, refreshToken: string) {
     const user = await this.usersService.findUserByEmail(userEmail);
 
-    // checks if the user exists and if the refresh token matches the one stored in the database
     if (!user || refreshToken !== user.refreshToken) {
       throw new HttpException(
         'Expired refresh token, login needed',
@@ -111,19 +102,15 @@ export class AuthService {
       );
     }
 
-    // generates new access and refresh tokens
     const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
     });
 
-    return tokens.accessToken; // returns the new access token
+    return {accessToken: tokens.accessToken};
   }
 
-  // logs out the user by invalidating the refresh token
   async logout(userEmail: string) {
-    if (userEmail) {
-      return await this.updateRefreshToken(userEmail, null); // sets the refresh token to null or empty
-    }
+      return await this.updateRefreshToken(userEmail, null);
   }
 }
