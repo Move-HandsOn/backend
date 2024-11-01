@@ -19,39 +19,39 @@ model User {
   refreshToken  String? @unique
   recoveryToken String? @unique
 
-  interests         UserInterest[]
-  activities        Activity[]
-  comments          Comment[]
-  feed              Feed[]
-  groups            GroupMember[]
-  followers         Follower[]       @relation("UserFollowers")
-  following         Follower[]       @relation("UserFollowing")
-  events            Event[]
-  likesOnActivities LikeOnActivity[]
-  likesOnComments   LikeOnComment[]
-  searchFilters     SearchFilter[]
+  interests  UserInterest[]
+  activities Activity[]
+  posts      Post[]
+  groups     GroupMember[]
+  events     Event[]
 
   groupRequests GroupRequest[]
 
+  followers Follower[] @relation("UserFollowers")
+  following Follower[] @relation("UserFollowing")
+
+  comments      Comment[]
+  likes         Like[]
+  searchFilters SearchFilter[]
+
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
+  Media      Media[]
 
   @@map("users")
 }
 
 model UserInterest {
-  interest_id    Int
-  insterest_name String
-  interest_type  String
+  category_id Int
+  category    Category @relation(fields: [category_id], references: [id])
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
 
-  @@id([user_id, interest_id])
+  @@id([user_id, category_id])
   @@map("user_interests")
 }
 
-// Activity-related models
 model Activity {
   id            String   @id @default(uuid())
   duration      Int
@@ -60,7 +60,7 @@ model Activity {
   post_type     String // 'profile', 'group', 'private'
 
   category_id Int
-  category    ActivityCategory @relation(fields: [category_id], references: [id])
+  category    Category @relation(fields: [category_id], references: [id])
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -68,10 +68,9 @@ model Activity {
   group_id String?
   group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
 
-  media    ActivityMedia[]
+  media    Media[]
   comments Comment[]
-  feed     Feed[]
-  likes    LikeOnActivity[]
+  likes    Like[]
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -79,33 +78,60 @@ model Activity {
   @@map("activities")
 }
 
-model ActivityMedia {
-  id          String   @id @default(uuid())
-  media_url   String
-  activity_id String
-  activity    Activity @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+model Post {
+  id           String @id @default(uuid())
+  post_content String
+  post_type    String // 'profile', 'group'
 
-  @@map("activity_media")
+  comments Comment[]
+  likes    Like[]
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  user_id  String
+  user     User    @relation(fields: [user_id], references: [id])
+  group_id String?
+  group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  @@map("posts")
 }
 
-model ActivityCategory {
-  id            Int        @id @default(autoincrement())
-  category_name String
-  activities    Activity[]
+model Media {
+  id        String @id @default(uuid())
+  media_url String
 
-  @@map("activities_categories")
+  activity_id String?
+  activity    Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+
+  user_id String?
+  user    User?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("medias_url")
+}
+
+model Category {
+  id            Int    @id @default(autoincrement())
+  category_name String
+
+  activities   Activity[]
+  userInterest UserInterest[]
+
+  @@map("categories")
 }
 
 model Comment {
-  id           String @id @default(uuid())
+  id           String  @id @default(uuid())
   comment_text String
+  user_id      String
+  activity_id  String?
+  post_id      String?
 
-  likes LikeOnComment[]
+  likes Like[]
 
-  user_id     String
-  user        User     @relation(fields: [user_id], references: [id])
-  activity_id String
-  activity    Activity @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [user_id], references: [id])
+  post     Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  activity Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -113,50 +139,30 @@ model Comment {
   @@map("comments")
 }
 
-model LikeOnComment {
-  id        String @id @default(uuid())
-  commentId String
-  userId    String
+model Like {
+  id          String  @id @default(uuid())
+  user_id     String
+  post_id     String?
+  comment_id  String?
+  activity_id String?
 
-  user    User    @relation(fields: [userId], references: [id])
-  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  comment  Comment?  @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+  post     Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  activity Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
-  @@map("like_on_comments")
+  @@map("likes")
 }
 
-model LikeOnActivity {
-  id         String @id @default(uuid())
-  activityId String
-  userId     String
-
-  user     User     @relation(fields: [userId], references: [id])
-  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
-
-  @@map("like_on_activities")
-}
-
-model SearchFilter {
-  id         String @id @default(uuid())
-  filterName String
-  filterType String
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@map("search_filters")
-}
-
-// Group-related models
 model Group {
-  id           String         @id @default(uuid())
-  name         String
-  description  String
-  group_image  String?
-  members      GroupMember[]
-  feed         Feed[]
-  events       Event[]
-  group_events GroupOnEvent[]
-  activities   Activity[]
+  id          String        @id @default(uuid())
+  name        String
+  description String
+  group_image String?
+  members     GroupMember[]
+  posts       Post[]
+  events      Event[]
+  activities  Activity[]
 
   created_at DateTime @default(now())
 
@@ -199,7 +205,6 @@ model Follower {
   @@map("followers")
 }
 
-// Event-related models
 model Event {
   id                  String   @id @default(uuid())
   name                String
@@ -217,8 +222,7 @@ model Event {
 
   created_at DateTime @default(now())
 
-  is_public        Boolean        @default(false)
-  shared_in_groups GroupOnEvent[]
+  is_public Boolean @default(false)
 
   user_id  String
   user     User    @relation(fields: [user_id], references: [id])
@@ -228,29 +232,13 @@ model Event {
   @@map("events")
 }
 
-model GroupOnEvent {
-  group_id String
-  event_id String
+model SearchFilter {
+  id         String @id @default(uuid())
+  filterName String
+  filterType String
 
-  group Group @relation(fields: [group_id], references: [id])
-  event Event @relation(fields: [event_id], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  @@id([group_id, event_id])
-  @@map("groupsOnEvents")
-}
-
-// Feed model
-model Feed {
-  id           String   @id @default(uuid())
-  post_content String
-  created_at   DateTime @default(now())
-
-  user_id     String
-  user        User      @relation(fields: [user_id], references: [id])
-  activity_id String?
-  activity    Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
-  group_id    String?
-  group       Group?    @relation(fields: [group_id], references: [id])
-
-  @@map("feeds")
+  @@map("search_filters")
 }
