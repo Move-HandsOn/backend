@@ -10,6 +10,7 @@ import { MailModule } from './mail/mail.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { GroupsModule } from './groups/groups.module';
 import { ActivitiesModule } from './activities/activities.module';
+import { FeedModule } from './feed/feed.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ActivitiesModule } from './activities/activities.module';
     SupabaseModule,
     ActivitiesModule,
     GroupsModule,
+    FeedModule,
   ],
   providers: [
     {
