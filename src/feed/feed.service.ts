@@ -52,7 +52,7 @@ export class FeedService {
       },
       take: 50,
       orderBy: {
-        created_at: 'desc',
+        created_at: 'asc',
       },
     });
 
@@ -73,6 +73,9 @@ export class FeedService {
         likes: true,
       },
       take: 50,
+      orderBy: {
+        created_at: 'asc',
+      },
     });
 
     const friendActivities = await this.prismaService.activity.findMany({
@@ -83,6 +86,9 @@ export class FeedService {
         post_type: 'profile'
       },
       take: 50,
+      orderBy: {
+        created_at: 'asc',
+      },
     });
 
     const groupActivities = await this.prismaService.activity.findMany({
@@ -92,6 +98,9 @@ export class FeedService {
         }
       },
       take: 50,
+      orderBy: {
+        created_at: 'asc',
+      },
     });
 
     return {
