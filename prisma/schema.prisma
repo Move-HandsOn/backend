@@ -155,14 +155,16 @@ model Like {
 }
 
 model Group {
-  id          String        @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String
   group_image String?
-  members     GroupMember[]
-  posts       Post[]
-  events      Event[]
-  activities  Activity[]
+  group_type  String //'public', 'private'
+
+  members    GroupMember[]
+  posts      Post[]
+  events     Event[]
+  activities Activity[]
 
   created_at DateTime @default(now())
 
