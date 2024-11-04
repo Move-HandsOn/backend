@@ -65,7 +65,7 @@ export class UsersService {
           }
         },
         interests: true,
-        feed: true,
+        posts: true,
         groups: true,
         followers: true,
         following: true,

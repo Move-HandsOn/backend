@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SupabaseService } from 'src/supabase/supabase.service';
@@ -15,7 +15,7 @@ export class ActivitiesService {
 
     const normalizedCategoryName = this.normalizeString(createActivityDto.category_name).toLowerCase();
 
-    const category = await this.prismaService.activityCategory.findFirst({
+    const category = await this.prismaService.category.findFirst({
       where: {
         category_name: normalizedCategoryName
       },
@@ -43,7 +43,7 @@ export class ActivitiesService {
       const uploadedFileUrls = await this.supabaseService.uploadMany(files)
 
       const mediaPromises = uploadedFileUrls.map((fileUrl) =>
-          prisma.activityMedia.create({
+          prisma.media.create({
               data: {
                   media_url: fileUrl,
                   activity_id: createdActivity.id,
