@@ -1,23 +1,3 @@
-/*
-  Warnings:
-
-  - The primary key for the `user_interests` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - You are about to drop the column `insterest_name` on the `user_interests` table. All the data in the column will be lost.
-  - You are about to drop the column `interest_id` on the `user_interests` table. All the data in the column will be lost.
-  - You are about to drop the column `interest_type` on the `user_interests` table. All the data in the column will be lost.
-  - You are about to drop the `activities_categories` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `activity_media` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `comments_on_activities` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `comments_on_posts` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `events_on_groups` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `like_on_activities` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `like_on_comments` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `likes_on_posts` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `likes_on_posts_comments` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `posts_on_groups` table. If the table is not empty, all the data it contains will be lost.
-  - Added the required column `category_id` to the `user_interests` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- DropForeignKey
 ALTER TABLE "activities" DROP CONSTRAINT "activities_category_id_fkey";
 

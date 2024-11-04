@@ -57,7 +57,7 @@ model Activity {
   duration      Int
   activity_date DateTime
   description   String?
-  post_type     String // 'profile', 'group', 'private'
+  post_type     String
 
   category_id Int
   category    Category @relation(fields: [category_id], references: [id])
@@ -81,7 +81,7 @@ model Activity {
 model Post {
   id           String @id @default(uuid())
   post_content String
-  post_type    String // 'profile', 'group'
+  post_type    String
 
   comments Comment[]
   likes    Like[]
@@ -159,7 +159,7 @@ model Group {
   name        String
   description String
   group_image String?
-  group_type  String //'public', 'private'
+  group_type  String
 
   members    GroupMember[]
   posts      Post[]
