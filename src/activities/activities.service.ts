@@ -35,6 +35,11 @@ export class ActivitiesService {
     };
 
     const activity = await this.prismaService.$transaction(async (prisma) => {
+
+      const createdActivity = await prisma.activity.create({
+        data: activityData,
+      });
+
       if(files && files.length > 0) {
         const uploadedFileUrls = await this.supabaseService.uploadMany(files)
 
@@ -46,14 +51,8 @@ export class ActivitiesService {
                 }
             })
         );
-
         await Promise.all(mediaPromises);
-
       }
-
-      const createdActivity = await prisma.activity.create({
-        data: activityData,
-      });
 
       return createdActivity;
     }, {
