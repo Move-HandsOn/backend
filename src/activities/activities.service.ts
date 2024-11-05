@@ -35,23 +35,25 @@ export class ActivitiesService {
     };
 
     const activity = await this.prismaService.$transaction(async (prisma) => {
+      if(files && files.length > 0) {
+        const uploadedFileUrls = await this.supabaseService.uploadMany(files)
+
+        const mediaPromises = uploadedFileUrls.map((fileUrl) =>
+            prisma.media.create({
+                data: {
+                    media_url: fileUrl,
+                    activity_id: createdActivity.id,
+                }
+            })
+        );
+
+        await Promise.all(mediaPromises);
+
+      }
 
       const createdActivity = await prisma.activity.create({
-          data: activityData,
+        data: activityData,
       });
-
-      const uploadedFileUrls = await this.supabaseService.uploadMany(files)
-
-      const mediaPromises = uploadedFileUrls.map((fileUrl) =>
-          prisma.media.create({
-              data: {
-                  media_url: fileUrl,
-                  activity_id: createdActivity.id,
-              }
-          })
-      );
-
-      await Promise.all(mediaPromises);
 
       return createdActivity;
     }, {
@@ -72,8 +74,39 @@ export class ActivitiesService {
                 media_url: true
             }
         },
-        comments: true,
-        likes: true,
+        comments: {
+          select: {
+            id: true,
+            comment_text: true,
+            created_at: true,
+            user: {
+              select: {
+                name: true,
+                profile_image: true,
+              }
+            },
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            }
+          }
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        }
       }
     });
 
@@ -96,8 +129,39 @@ export class ActivitiesService {
                 media_url: true
             }
         },
-        comments: true,
-        likes: true,
+        comments: {
+          select: {
+            id: true,
+            comment_text: true,
+            created_at: true,
+            user: {
+              select: {
+                name: true,
+                profile_image: true,
+              }
+            },
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            }
+          }
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        }
       }
     });
 

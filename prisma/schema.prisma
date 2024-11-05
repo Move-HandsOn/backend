@@ -152,6 +152,9 @@ model Like {
   post     Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
   activity Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
+  @@unique([user_id, post_id])
+  @@unique([user_id, comment_id])
+  @@unique([user_id, activity_id])
   @@map("likes")
 }
 
