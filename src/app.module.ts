@@ -11,6 +11,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { GroupsModule } from './groups/groups.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { FeedModule } from './feed/feed.module';
+import { InteractionsModule } from './interactions/interactions.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { FeedModule } from './feed/feed.module';
     ActivitiesModule,
     GroupsModule,
     FeedModule,
+    InteractionsModule,
   ],
   providers: [
     {
