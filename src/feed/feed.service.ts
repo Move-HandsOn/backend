@@ -21,7 +21,17 @@ export class FeedService {
           select: {
             id: true,
             comment_text: true,
-            likes: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
             created_at: true,
             user: {
               select: {
@@ -45,6 +55,7 @@ export class FeedService {
         },
         user: {
           select: {
+            id: true,
             name: true,
             profile_image: true
           }
@@ -69,7 +80,21 @@ export class FeedService {
             profile_image: true
           }
         },
-        comments: true,
+        comments: {
+          select: {
+            id: true,
+            comment_text: true,
+            likes: true,
+            created_at: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          },
+        },
         likes: true,
       },
       take: 50,
@@ -85,6 +110,19 @@ export class FeedService {
         },
         post_type: 'profile'
       },
+      include: {
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          }
+        }
+      },
       take: 50,
       orderBy: {
         created_at: 'asc',
@@ -95,6 +133,18 @@ export class FeedService {
       where: {
         user_id: {
           in: groupIds
+        }
+      },
+      include: {
+        likes: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                profile_image: true
+              }
+            }
+          }
         }
       },
       take: 50,
