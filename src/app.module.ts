@@ -12,6 +12,7 @@ import { GroupsModule } from './groups/groups.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { FeedModule } from './feed/feed.module';
 import { InteractionsModule } from './interactions/interactions.module';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { InteractionsModule } from './interactions/interactions.module';
     GroupsModule,
     FeedModule,
     InteractionsModule,
+    PostsModule,
   ],
   providers: [
     {
