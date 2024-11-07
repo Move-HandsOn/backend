@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsString, MaxLength, ValidateIf } from 'class-validator';
 
 export enum ActivityType {
@@ -30,7 +30,7 @@ export class CreateActivityDto {
   @MaxLength(350, { message: 'Must have less then 32 characteres' })
   description?: string;
 
-  @ValidateIf((o) => o.type === ActivityType.GROUP)
+  @ValidateIf((o) => o.post_type === ActivityType.GROUP)
   @IsString({ message: 'Group ID must be a string.' })
   @IsNotEmpty({ message: 'Group ID is required when type is "group".' })
   group_id?: string;
