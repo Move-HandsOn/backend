@@ -270,6 +270,50 @@ export class UsersService {
     return await this.update(user.email, { ...user, password });
   }
 
+  async getMutualFollowers(user_id: string) {
+    const following = await this.prismaService.follower.findMany({
+      where: {
+        follower_id: user_id,
+      },
+      select: {
+        followed_id: true,
+        followed: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true,
+          }
+        }
+      },
+    });
+
+    const followers = await this.prismaService.follower.findMany({
+      where: {
+        followed_id: user_id,
+      },
+      select: {
+        follower_id: true,
+        follower: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true,
+          }
+        }
+      },
+    });
+
+    const mutualFollowers = following
+    .map((f) => f.followed)
+    .filter((followed) =>
+      followers.some((f) => f.follower.id === followed.id)
+    );
+
+    return {
+      friends: mutualFollowers
+    }
+  }
+
   generateHash(password: string): string {
     return bcrypt.hashSync(password, 10);
   }

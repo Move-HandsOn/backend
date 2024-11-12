@@ -58,6 +58,11 @@ export class UsersController {
     return userFound;
   }
 
+  @Get('friends')
+  async getFriends(@GetUser() user: User) {
+    return await this.usersService.getMutualFollowers(user.id);
+  }
+
   @UseInterceptors(FileInterceptor('profile_image'))
   @Patch('profile')
   async update(
