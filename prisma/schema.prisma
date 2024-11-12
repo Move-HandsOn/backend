@@ -13,7 +13,7 @@ model User {
   name          String
   email         String  @unique
   password      String
-  profile_image String?
+  profile_image String? @default("https://nxtsdipismqpeplgkcya.supabase.co/storage/v1/object/public/move/default.jpg?t=2024-11-12T15%3A25%3A15.634Z")
   bio           String?
   gender        String?
 
@@ -37,7 +37,8 @@ model User {
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
-  Media      Media[]
+  media      Media[]
+  group      Group[]
 
   @@map("users")
 }
@@ -47,7 +48,7 @@ model UserInterest {
   category    Category @relation(fields: [category_id], references: [id])
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, category_id])
   @@map("user_interests")
@@ -86,6 +87,7 @@ model Post {
 
   comments Comment[]
   likes    Like[]
+  media    Media[]
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -105,8 +107,14 @@ model Media {
   activity_id String?
   activity    Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
+  group_id String?
+  group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
   user_id String?
   user    User?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  post_id String?
+  post    Post?   @relation(fields: [post_id], references: [id], onDelete: Cascade)
 
   @@map("medias_url")
 }
@@ -117,6 +125,7 @@ model Category {
 
   activities   Activity[]
   userInterest UserInterest[]
+  Group        Group[]
 
   @@map("categories")
 }
@@ -130,7 +139,7 @@ model Comment {
 
   likes Like[]
 
-  user     User      @relation(fields: [user_id], references: [id])
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   post     Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
   activity Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
@@ -165,14 +174,20 @@ model Group {
   group_image String?
   group_type  String
 
-  members    GroupMember[]
-  posts      Post[]
-  events     Event[]
-  activities Activity[]
+  category_id Int
+  category    Category @relation(fields: [category_id], references: [id])
+
+  admin_id String?
+  admin    User?   @relation(fields: [admin_id], references: [id])
+
+  members       GroupMember[]
+  posts         Post[]
+  events        Event[]
+  activities    Activity[]
+  groupRequests GroupRequest[]
+  media         Media[]
 
   created_at DateTime @default(now())
-
-  groupRequests GroupRequest[]
 
   @@map("groups")
 }
@@ -181,21 +196,21 @@ model GroupMember {
   group_id String
   user_id  String
 
-  group Group @relation(fields: [group_id], references: [id])
-  user  User  @relation(fields: [user_id], references: [id])
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([group_id, user_id])
   @@map("group_members")
 }
 
 model GroupRequest {
-  id      String @id @default(uuid())
-  groupId String
-  userId  String
-  status  String @default("pending")
+  id       String @id @default(uuid())
+  group_id String
+  user_id  String
+  status   String @default("pending")
 
-  group Group @relation(fields: [groupId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("group_requests")
 }
@@ -231,20 +246,20 @@ model Event {
   is_public Boolean @default(false)
 
   user_id  String
-  user     User    @relation(fields: [user_id], references: [id])
+  user     User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   group_id String?
-  group    Group?  @relation(fields: [group_id], references: [id])
+  group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
 
   @@map("events")
 }
 
 model SearchFilter {
-  id         String @id @default(uuid())
-  filterName String
-  filterType String
+  id          String @id @default(uuid())
+  filter_name String
+  filter_type String
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
 
   @@map("search_filters")
 }
