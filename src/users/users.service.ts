@@ -62,6 +62,9 @@ export class UsersService {
             media: { select: { media_url: true } },
             comments: true,
             likes: true,
+          },
+          orderBy: {
+            created_at: 'desc'
           }
         },
         interests: true,
