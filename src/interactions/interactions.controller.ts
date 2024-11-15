@@ -12,7 +12,7 @@ export class InteractionsController {
   @Post( 'comment')
   @HttpCode(HttpStatus.NO_CONTENT)
   async createComment(@Body() commentDto: CommentDto, @GetUser() user: User) {
-    return this.interactionsService.createComment(commentDto, user.id);
+    return this.interactionsService.createComment(commentDto, user);
   }
 
   @Delete('comment/:id')
@@ -24,12 +24,12 @@ export class InteractionsController {
   @Post( 'like')
   @HttpCode(HttpStatus.NO_CONTENT)
   async toggleLike(@Body() likeDto: LikeDto, @GetUser() user: User) {
-    await this.interactionsService.toggleLike(likeDto, user.id);
+    await this.interactionsService.toggleLike(likeDto, user);
   }
 
   @Post( 'follow/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async toggleFollow(@Param('id') id: string, @GetUser() user: User) {
-    await this.interactionsService.toggleFollow( user.id, id);
+    await this.interactionsService.toggleFollow( user, id, );
   }
 }

@@ -13,6 +13,7 @@ import { ActivitiesModule } from './activities/activities.module';
 import { FeedModule } from './feed/feed.module';
 import { InteractionsModule } from './interactions/interactions.module';
 import { PostsModule } from './posts/posts.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PostsModule } from './posts/posts.module';
     FeedModule,
     InteractionsModule,
     PostsModule,
+    NotificationsModule,
   ],
   providers: [
     {
