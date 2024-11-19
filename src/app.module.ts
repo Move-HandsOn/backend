@@ -14,7 +14,6 @@ import { FeedModule } from './feed/feed.module';
 import { InteractionsModule } from './interactions/interactions.module';
 import { PostsModule } from './posts/posts.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -30,7 +29,6 @@ import { EventsModule } from './events/events.module';
     InteractionsModule,
     PostsModule,
     NotificationsModule,
-    EventsModule,
   ],
   providers: [
     {
