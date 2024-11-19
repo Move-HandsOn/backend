@@ -234,11 +234,7 @@ model Event {
   id                  String   @id @default(uuid())
   name                String
   event_date          DateTime
-  address_street      String
-  address_number      String
-  address_city        String
-  address_state       String
-  address_cep         String
+  address             String
   is_recurring        Boolean  @default(false)
   recurrence_interval Int?
   start_time          DateTime
@@ -247,7 +243,7 @@ model Event {
 
   created_at DateTime @default(now())
 
-  is_public Boolean @default(false)
+  event_type String
 
   user_id  String
   user     User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
