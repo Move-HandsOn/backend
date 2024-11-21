@@ -30,7 +30,7 @@ export class AuthService {
           sub: payload.sub,
         },
         {
-          expiresIn: '180s',
+          expiresIn: '7d',
         }
       ),
       this.jwtService.signAsync(
