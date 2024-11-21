@@ -15,6 +15,7 @@ import { InteractionsModule } from './interactions/interactions.module';
 import { PostsModule } from './posts/posts.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EventsModule } from './events/events.module';
+import { CalendarModule } from './calendar/calendar.module';
 
 @Module({
   imports: [
@@ -31,6 +32,8 @@ import { EventsModule } from './events/events.module';
     PostsModule,
     NotificationsModule,
     EventsModule,
+    CalendarModule,
+    CalendarModule,
   ],
   providers: [
     {
