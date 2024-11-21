@@ -3,6 +3,7 @@ import { CreateEventDto, EEventType } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { GroupType } from 'src/groups/dto/create-group.dto';
 
 @Injectable()
 export class EventsService {
@@ -33,25 +34,72 @@ export class EventsService {
   async findAll(user: User) {
     return await this.prismaService.event.findMany({
       where: {
-        user_id: user.id,
+        OR: [
+          {
+            event_type: EEventType.PROFILE
+          },
+          {
+            event_type: EEventType.GROUP,
+            AND: [
+              {
+                group: {
+                  members: {
+                    some: {
+                      user_id: user.id
+                    }
+                  }
+                }
+              },
+              {
+                group: {
+                  group_type: 'public'
+                }
+              }
+            ]
+          },
+          {
+            event_type: EEventType.PRIVATE,
+            user_id: user.id
+          }
+        ]
       }
-    })
+    });
   }
 
   async findOne(id: string, user: User) {
     const event = await this.prismaService.event.findUnique({
       where: {
         id,
-        user_id: user.id
-      }
-    })
+      },
+      include: {
+        group: {
+          include: {
+            members: true,
+          },
+        },
+      },
+    });
 
-    if(!event) {
-      throw new NotFoundException('Event not found.')
+    if (!event) {
+      throw new NotFoundException('Event not found.');
+    }
+
+    if (event.event_type === EEventType.PRIVATE && event.user_id !== user.id) {
+      throw new NotFoundException('Event not found.');
+    }
+
+    if (event.event_type === 'group') {
+      const isMember = event.group?.members.some(member => member.user_id === user.id);
+      const isPublic = event.group?.group_type === GroupType.PUBLIC;
+
+      if (!isPublic && !isMember) {
+        throw new NotFoundException('Event not found.');
+      }
     }
 
     return event;
   }
+
 
   async update(id: string, updateEventDto: UpdateEventDto, user: User) {
     const event = await this.prismaService.event.findUnique({
