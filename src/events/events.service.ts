@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventDto, EEventType } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { User } from '@prisma/client';
+import { Event, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GroupType } from 'src/groups/dto/create-group.dto';
+import formatEventData from 'src/utils/formatEventData';
 
 @Injectable()
 export class EventsService {
@@ -32,7 +33,7 @@ export class EventsService {
   }
 
   async findAll(user: User) {
-    return await this.prismaService.event.findMany({
+    const events = await this.prismaService.event.findMany({
       where: {
         OR: [
           {
@@ -64,6 +65,8 @@ export class EventsService {
         ]
       }
     });
+
+    return events.map(event => formatEventData(event));
   }
 
   async findOne(id: string, user: User) {
@@ -97,9 +100,8 @@ export class EventsService {
       }
     }
 
-    return event;
+    return formatEventData(event);
   }
-
 
   async update(id: string, updateEventDto: UpdateEventDto, user: User) {
     const event = await this.prismaService.event.findUnique({
@@ -165,8 +167,7 @@ export class EventsService {
     }
   }
 
-
-  validateUpdateEventDto(updateEventDto: UpdateEventDto, event: any) {
+  validateUpdateEventDto(updateEventDto: UpdateEventDto, event: Event) {
     const { event_type, group_id } = updateEventDto;
 
     if (event.event_type === EEventType.GROUP && event_type !== EEventType.GROUP) {
