@@ -33,7 +33,6 @@ import { CalendarModule } from './calendar/calendar.module';
     NotificationsModule,
     EventsModule,
     CalendarModule,
-    CalendarModule,
   ],
   providers: [
     {
