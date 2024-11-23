@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import { User } from '@prisma/client';
 import { GetUser } from 'src/decorators/user.decorator';
@@ -8,8 +8,8 @@ export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Get()
-  async getUserCalendar(@GetUser() user: User) {
-    return await this.calendarService.getUserCalendar(user)
+  async getUserCalendar(@GetUser() user: User, @Query('date') date?: string) {
+    return await this.calendarService.getUserCalendar(user, date)
   }
 
   @Post('/:id')
