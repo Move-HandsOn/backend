@@ -111,6 +111,15 @@ export class InteractionsService {
   }
 
   async toggleFollow(user: User, followed_id: string) {
+
+    const userToFollow = await this.prismaService.user.findUnique({
+      where: { id: followed_id },
+    });
+
+    if (!userToFollow) {
+      throw new Error('The user you are trying to follow does not exist.');
+    }
+
     const existingFollow = await this.prismaService.follower.findFirst({
       where: {
         followed_id,

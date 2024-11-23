@@ -11,7 +11,10 @@ export class NotificationsService {
     async createNotification(event: ICreateNotification, message: string) {
       await this.prismaService.notification.create({
         data: {
-          ...event,
+          user_id: event.user_id,
+          event_type: event.event_type,
+          followed_id: event.followed_id,
+          follower_id: event.follower_id,
           message,
         },
       });
@@ -23,14 +26,58 @@ export class NotificationsService {
     }
 
     async getUserNotifications(user_id: string) {
-      return await this.prismaService.notification.findMany({
+      const notifications =  await this.prismaService.notification.findMany({
         where: {
           user_id
+        },
+        include: {
+          like: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  profile_image: true
+                }
+              }
+            }
+          },
+          Follower: {
+            where: {
+              followed_id: user_id
+            },
+            select: {
+              follower: {
+                select: {
+                  id: true,
+                  name: true,
+                  profile_image: true
+                }
+              }
+            }
+          }
+          ,
+          comment: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  profile_image: true
+                }
+              }
+            }
+          }
         },
         orderBy: {
           createdAt: 'desc'
         }
       })
-    }
 
+      return notifications.map(notification => ({
+        ...notification,
+        follower: notification.Follower?.follower || null,
+        Follower: undefined
+      }));
+    }
 }

@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { FileUploadDTO } from 'src/supabase/dto/upload.dto';
 import { User } from '@prisma/client';
+import { GroupType } from 'src/groups/dto/create-group.dto';
 
 @Injectable()
 export class UsersService {
@@ -69,12 +70,31 @@ export class UsersService {
         },
         interests: true,
         posts: true,
-        groups: true,
         followers: true,
         following: true,
         events: true,
       },
     });
+
+    const groups = await this.prismaService.group.findMany({
+      where: {
+        OR: [
+          {
+            members: {
+              some: {
+                user_id: id
+              }
+            }
+          },
+          {
+            admin_id: id
+          },
+          {
+            group_type: GroupType.PUBLIC
+          }
+        ]
+      }
+    })
 
     if (!user) {
       return null;
@@ -82,7 +102,7 @@ export class UsersService {
 
     const followerCount = user.followers.length;
     const followingCount = user.following.length;
-    const groupCount = user.groups.length;
+    const groupCount = groups.length;
     const activityCount = user.activities.length;
 
     const { averageDaily, weeklyProgress, weekdayDuration} = this.calculateActivityStats(user.activities);
@@ -94,6 +114,7 @@ export class UsersService {
 
     return {
         ...user,
+        groups,
         activities,
         followerCount,
         followingCount,
