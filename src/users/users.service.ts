@@ -72,7 +72,6 @@ export class UsersService {
         posts: true,
         followers: true,
         following: true,
-        events: true,
       },
     });
 
