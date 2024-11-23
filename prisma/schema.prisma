@@ -274,9 +274,9 @@ model Notification {
   user_id String
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  Follower            Follower? @relation(fields: [followerFollower_id, followerFollowed_id], references: [follower_id, followed_id], onDelete: Cascade)
-  followerFollower_id String?
-  followerFollowed_id String?
+  Follower    Follower? @relation(fields: [follower_id, followed_id], references: [follower_id, followed_id], onDelete: Cascade)
+  follower_id String?
+  followed_id String?
 
   comment_id String?
   comment    Comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade)
@@ -286,6 +286,8 @@ model Notification {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("notifications")
 }
 
 model Calendar {
@@ -296,4 +298,5 @@ model Calendar {
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([event_id, user_id])
+  @@map("calendars")
 }

@@ -1,4 +1,4 @@
-import { formatEventData } from 'src/utils/formatEventData';
+import formatEventData from 'src/utils/formatEventData';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -8,7 +8,7 @@ export class CalendarService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getUserCalendar(user: User) {
-    const events = await this.prismaService.calendar.findMany({
+    const calendar = await this.prismaService.calendar.findMany({
       where: {
         user_id: user.id
       },
@@ -34,7 +34,12 @@ export class CalendarService {
       }
     })
 
-    return events.map(event => formatEventData(event));
+    return calendar.map(data => {
+      return {
+        ...data,
+        event: formatEventData(data.event)
+      }
+    });
   }
 
   async addEventToCalendar(user: User, event_id: string){
