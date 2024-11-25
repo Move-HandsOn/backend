@@ -1,4 +1,4 @@
-import formatEventData from 'src/utils/formatEventData';
+// import formatEventData from 'src/utils/formatEventData';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -71,7 +71,7 @@ export class CalendarService {
     return calendarData.map(data => {
       return {
         ...data,
-        event: formatEventData(data.event)
+        event: data.event
       };
     });
   }

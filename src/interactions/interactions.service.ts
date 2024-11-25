@@ -32,7 +32,7 @@ export class InteractionsService {
         event_type: NotificationEventType.COMMENT_ON_ACTIVITY,
         comment_id: comment.id,
       },
-      `${user.name} commented on your activity.`,
+      `${user.name} comentou na sua atividade.`,
     )
 
     return comment;
@@ -94,10 +94,10 @@ export class InteractionsService {
       const { event_type, message } = likeDto.comment_id ?
         {
           event_type: NotificationEventType.LIKE_ON_COMMENT,
-          message: `${user.name} liked your comment.`,
+          message: `${user.name} curtiu seu comentário.`,
         } : {
           event_type: NotificationEventType.LIKE_ON_ACTIVITY,
-          message: `${user.name} liked your activity.`,
+          message: `${user.name} curtiu sua atividade.`,
         };
 
       await this.notificationsService.createNotification(
@@ -151,10 +151,8 @@ export class InteractionsService {
           followed_id,
           follower_id: user.id,
         },
-        `${user.name} followed you.`,
+        `${user.name} segiu você.`,
       )
     }
   }
-
-
 }

@@ -10,9 +10,8 @@ export class InteractionsController {
   constructor(private readonly interactionsService: InteractionsService) {}
 
   @Post( 'comment')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async createComment(@Body() commentDto: CommentDto, @GetUser() user: User) {
-    return this.interactionsService.createComment(commentDto, user);
+    return await this.interactionsService.createComment(commentDto, user);
   }
 
   @Delete('comment/:id')
