@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ICreateNotification, NotificationEventType } from './interface/create-notification';
+import { ICreateNotification } from './interface/create-notification';
 
 @Injectable()
 export class NotificationsService {
