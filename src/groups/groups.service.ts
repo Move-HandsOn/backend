@@ -1,7 +1,7 @@
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateGroupDto } from './dto/create-group.dto';
+import { CreateGroupDto, GroupType } from './dto/create-group.dto';
 import { FileUploadDTO } from 'src/supabase/dto/upload.dto';
 
 @Injectable()
@@ -105,11 +105,12 @@ export class GroupsService {
       });
     }
 
+    await this.addGroupMember(group.id, user_id)
+
     return group;
   }
 
   async requestJoin(user_id: string, id: string) {
-    console.log(id)
   const group = await this.prismaService.group.findUnique({
     where: {
       id
@@ -131,10 +132,15 @@ export class GroupsService {
     throw new BadRequestException(`The request for join group has already been made and is with the state: ${existingRequest.status}.`);
   }
 
+  if(group.group_type === GroupType.PUBLIC) {
+    await this.addGroupMember( id, user_id);
+    return;
+  }
+
   await this.prismaService.groupRequest.create({
     data: {
       group_id: id,
-      user_id,
+      user_id
     },
   });
 
@@ -188,12 +194,7 @@ export class GroupsService {
       },
     });
 
-    updateData.createMember && await this.prismaService.groupMember.create({
-        data: {
-          group_id,
-          user_id: request.user_id,
-        },
-      });
+    updateData.createMember && await this.addGroupMember(request.user_id, group_id)
 
     return;
   }
@@ -269,5 +270,14 @@ export class GroupsService {
         admin_id
       }
     })
+  }
+
+  async addGroupMember(group_id: string, member_id: string,) {
+    this.prismaService.groupMember.create({
+      data: {
+        group_id,
+        user_id: member_id,
+      },
+    });
   }
 }
