@@ -26,9 +26,22 @@ export class InteractionsService {
       }
     });
 
+    const { user: author } = await this.prismaService.activity.findFirst({
+      where: {
+        id: commentDto.activity_id
+      },
+      select: {
+        user: {
+          select: {
+            id: true
+          }
+        }
+      }
+    })
+
     await this.notificationsService.createNotification(
       {
-        user_id: user.id,
+        user_id: author.id,
         event_type: NotificationEventType.COMMENT_ON_ACTIVITY,
         comment_id: comment.id,
       },
@@ -57,61 +70,7 @@ export class InteractionsService {
     })
   }
 
-  async toggleLike(likeDto: LikeDto, user: User){
-    const { comment_id, activity_id, post_id } = likeDto;
-    if (
-      (comment_id && activity_id) ||
-      (comment_id && post_id) ||
-      (activity_id && post_id) ||
-      (!comment_id && !activity_id && !post_id)
-    ) {
-      throw new BadRequestException('Only one of activity id, post id or comment id should be provided, not both or none.');
-    }
-
-    const searchField =
-      comment_id ? { comment_id, user_id: user.id }
-      : activity_id ? { activity_id, user_id: user.id }
-      : { post_id, user_id: user.id };
-
-    const like = await this.prismaService.like.findFirst({
-      where: searchField,
-    });
-
-    if(like){
-      await this.prismaService.like.delete({
-        where: {
-            id: like.id
-          }
-        });
-    } else {
-      const newLike = await this.prismaService.like.create({
-        data: {
-          user_id: user.id,
-          ...likeDto
-        }
-      });
-
-      const { event_type, message } = likeDto.comment_id ?
-        {
-          event_type: NotificationEventType.LIKE_ON_COMMENT,
-          message: `${user.name} curtiu seu comentário.`,
-        } : {
-          event_type: NotificationEventType.LIKE_ON_ACTIVITY,
-          message: `${user.name} curtiu sua atividade.`,
-        };
-
-      await this.notificationsService.createNotification(
-        {
-          user_id: user.id,
-          event_type,
-          like_id: newLike.id
-        }, message
-      )
-    }
-  }
-
   async toggleFollow(user: User, followed_id: string) {
-
     const userToFollow = await this.prismaService.user.findUnique({
       where: { id: followed_id },
     });
@@ -153,6 +112,104 @@ export class InteractionsService {
         },
         `${user.name} segiu você.`,
       )
+    }
+  }
+
+  async toggleLike(likeDto: LikeDto, user: User) {
+    const { comment_id, activity_id, post_id } = likeDto;
+
+    this.validateLikeDto(comment_id, activity_id, post_id);
+
+    const searchField = this.getSearchField(comment_id, activity_id, post_id, user.id);
+
+    const existingLike = await this.prismaService.like.findFirst({ where: searchField });
+
+    if (existingLike) {
+      await this.prismaService.like.delete({
+        where: {
+          id: existingLike.id
+        }
+      });
+      return;
+    }
+
+    const authorId = await this.getAuthorId(comment_id, activity_id);
+
+    const newLike = await this.prismaService.like.create({
+      data: {
+        user_id: user.id,
+        ...likeDto,
+      },
+    });
+
+    const { event_type, message } = this.getNotificationDetails(comment_id, activity_id, user.name);
+
+    await this.notificationsService.createNotification(
+      {
+        user_id: authorId,
+        event_type,
+        like_id: newLike.id,
+      },
+      message,
+    );
+  }
+
+  private validateLikeDto(comment_id: string, activity_id: string, post_id: string) {
+    const conditions = [
+      (comment_id && activity_id),
+      (comment_id && post_id),
+      (activity_id && post_id),
+      (!comment_id && !activity_id && !post_id),
+    ];
+
+    if (conditions.some((condition) => condition)) {
+      throw new BadRequestException(
+        'Only one of activity id, post id or comment id should be provided, not both or none.',
+      );
+    }
+  }
+
+  private getSearchField(comment_id: string, activity_id: string, post_id: string, userId: string) {
+    if (comment_id) return { comment_id, user_id: userId };
+    if (activity_id) return { activity_id, user_id: userId };
+    return { post_id, user_id: userId };
+  }
+
+  private async getAuthorId(comment_id?: string, activity_id?: string): Promise<string> {
+    if (comment_id) {
+      const comment = await this.prismaService.comment.findUnique({
+        where: { id: comment_id },
+        select: { user: { select: { id: true } } },
+      });
+      if (!comment) throw new NotFoundException('Comment not found.');
+      return comment.user.id;
+    }
+
+    if (activity_id) {
+      const activity = await this.prismaService.activity.findUnique({
+        where: { id: activity_id },
+        select: { user: { select: { id: true } } },
+      });
+      if (!activity) throw new NotFoundException('Activity not found.');
+      return activity.user.id;
+    }
+
+    throw new BadRequestException('Invalid data.');
+  }
+
+  private getNotificationDetails(comment_id: string, activity_id: string, userName: string) {
+    if (comment_id) {
+      return {
+        event_type: NotificationEventType.LIKE_ON_COMMENT,
+        message: `${userName} curtiu seu comentário.`,
+      };
+    }
+
+    if (activity_id) {
+      return {
+        event_type: NotificationEventType.LIKE_ON_ACTIVITY,
+        message: `${userName} curtiu sua atividade.`,
+      };
     }
   }
 }
