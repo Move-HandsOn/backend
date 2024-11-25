@@ -60,9 +60,33 @@ export class UsersService {
         gender: true,
         activities: {
           include: {
-            media: { select: { media_url: true } },
-            comments: true,
-            likes: true,
+            media: {
+              select: {
+                media_url: true
+              }
+            },
+            comments: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            likes: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
           },
           orderBy: {
             created_at: 'desc'
