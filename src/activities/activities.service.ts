@@ -88,6 +88,7 @@ export class ActivitiesService {
               select: {
                 user: {
                   select: {
+                    id: true,
                     name: true,
                     profile_image: true,
                   }
@@ -100,6 +101,7 @@ export class ActivitiesService {
           select: {
             user: {
               select: {
+                id: true,
                 name: true,
                 profile_image: true,
               }
@@ -135,6 +137,7 @@ export class ActivitiesService {
             created_at: true,
             user: {
               select: {
+                id: true,
                 name: true,
                 profile_image: true,
               }
@@ -143,6 +146,7 @@ export class ActivitiesService {
               select: {
                 user: {
                   select: {
+                    id: true,
                     name: true,
                     profile_image: true,
                   }
@@ -155,6 +159,7 @@ export class ActivitiesService {
           select: {
             user: {
               select: {
+                id: true,
                 name: true,
                 profile_image: true,
               }
@@ -168,7 +173,10 @@ export class ActivitiesService {
       return null;
     }
 
-    return activity;
+    return {
+      likeCount: activity.likes.length ?? 0,
+      ...activity,
+    };
   }
 
   async remove(id: string, userId: string) {
