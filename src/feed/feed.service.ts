@@ -6,14 +6,10 @@ export class FeedService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getUserFeed(userId: string) {
-    const friendsIds = await this.getFriendIds(userId);
     const groupIds = await this.getUserGroupIds(userId);
 
     const friendPosts = await this.prismaService.post.findMany({
       where: {
-        user_id: {
-          in: friendsIds,
-        },
         post_type: "profile",
       },
       include: {
@@ -73,18 +69,22 @@ export class FeedService {
           in: groupIds
         }
       },
-      include:{
-        user: {
-          select: {
-            name: true,
-            profile_image: true
-          }
-        },
+      include: {
         comments: {
           select: {
             id: true,
             comment_text: true,
-            likes: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
             created_at: true,
             user: {
               select: {
@@ -95,7 +95,24 @@ export class FeedService {
             }
           },
         },
-        likes: true,
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true
+          }
+        }
       },
       take: 50,
       orderBy: {
@@ -105,14 +122,25 @@ export class FeedService {
 
     const friendActivities = await this.prismaService.activity.findMany({
       where: {
-        user_id: {
-          in: friendsIds
-        },
         post_type: 'profile'
       },
       include: {
-        likes: {
+        comments: {
           select: {
+            id: true,
+            comment_text: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            created_at: true,
             user: {
               select: {
                 id: true,
@@ -120,6 +148,24 @@ export class FeedService {
                 profile_image: true
               }
             }
+          },
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true
           }
         }
       },
@@ -136,14 +182,47 @@ export class FeedService {
         }
       },
       include: {
-        likes: {
+        comments: {
           select: {
+            id: true,
+            comment_text: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            created_at: true,
             user: {
               select: {
+                id: true,
                 name: true,
                 profile_image: true
               }
             }
+          },
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true
           }
         }
       },
