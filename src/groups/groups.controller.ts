@@ -16,6 +16,12 @@ export class GroupsController {
     return groups;
   }
 
+  @Get('/:id/requests')
+  async getGroupRequests(@GetUser() user:  User, @Param('id') id: string, ) {
+    return await this.groupsService.listGroupRequests(id, user.id);
+  }
+
+
   @Get('/myGroup')
   async listMyGroups(@GetUser() user:  User){
     const groups = await this.groupsService.listGroupsByMember(user.id);
@@ -28,9 +34,9 @@ export class GroupsController {
     return await this.groupsService.createGroup(createGroupDto, user.id, file)
   }
 
-  @Get('/:id/requests')
-  async getGroupRequests(@GetUser() user:  User, @Param('id') id: string, ) {
-    return await this.groupsService.listGroupRequests(id, user.id);
+  @Get('/:id')
+  async groupDetail(@GetUser() user:  User, @Param('id') id: string, ) {
+    return await this.groupsService.groupDetail(id);
   }
 
   @Post('/:id/requests')
