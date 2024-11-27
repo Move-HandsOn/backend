@@ -203,9 +203,6 @@ model GroupMember {
   group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
   @@id([group_id, user_id])
   @@map("group_members")
 }
