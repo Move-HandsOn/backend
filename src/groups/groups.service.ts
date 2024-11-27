@@ -11,20 +11,42 @@ export class GroupsService {
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  async listGroups(user_id: string){
+  async listGroups(user_id: string) {
     const groups = await this.prismaService.group.findMany({
       include: {
-        members: true
-    }})
+        members: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              },
+            },
+          },
+        },
+        groupRequests: true,
+        events: true
+      },
+    });
 
     return groups.map((group) => {
-      const isParticipation = group.members.some(
-        (member) => member.user_id === user_id,
+      const mappedMembers = group.members.map((member) => member.user);
+
+      const groupRequest = group.groupRequests.find(
+        (request) => request.user_id === user_id && request.status !== "rejected"
       );
+
+      const status = groupRequest
+        ? "pending"
+        : mappedMembers.some((member) => member.id === user_id)
+        ? "joined"
+        : "none";
 
       return {
         ...group,
-        isParticipation,
+        members: mappedMembers,
+        status,
       };
     });
   }
@@ -41,30 +63,48 @@ export class GroupsService {
             },
           },
           {
-            admin_id: user_id,
+            groupRequests: {
+              some: {
+                user_id,
+                status: {
+                  not: "rejected",
+                },
+              },
+            },
           },
         ],
       },
       include: {
         members: {
+          where: {
+            user_id,
+          },
           select: {
             user: {
               select: {
                 id: true,
                 name: true,
                 profile_image: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+        events: true
+      },
+    });
 
-    })
-    return groups;
+    return groups.map((group) => {
+      const isMember = group.members.length > 0;
+      const status = isMember ? "joined" : "pending";
+
+      return {
+        ...group,
+        status,
+      };
+    });
   }
 
   async createGroup(createGroupDto: CreateGroupDto, user_id: string, file: FileUploadDTO) {
-
     const { friend_ids, category_name, ...groupData } = createGroupDto;
 
     const category = await this.prismaService.category.findFirst({
@@ -113,7 +153,7 @@ export class GroupsService {
   async requestJoin(user_id: string, id: string) {
   const group = await this.prismaService.group.findUnique({
     where: {
-      id
+      id,
     },
   });
 
@@ -123,32 +163,71 @@ export class GroupsService {
 
   const existingRequest = await this.prismaService.groupRequest.findFirst({
     where: {
-      id,
-      user_id
+      group_id: id,
+      user_id,
+      status: 'pending'
     },
   });
 
+  const existingMember = await this.prismaService.groupMember.findFirst({
+    where: {
+      group_id: id,
+      user_id,
+    }
+  })
+
   if (existingRequest) {
-    throw new BadRequestException(`The request for join group has already been made and is with the state: ${existingRequest.status}.`);
+    await this.prismaService.groupRequest.delete({
+      where: {
+        id: existingRequest.id,
+        group_id: id,
+        user_id,
+      }
+    })
+
+    return {
+      message: 'Join request canceled.'
+    }
+  }
+
+  if (existingMember) {
+    await this.prismaService.groupMember.delete({
+      where: {
+        group_id_user_id: {
+          user_id: existingMember.user_id,
+          group_id: existingMember.group_id,
+        }
+      }
+    })
+
+    return {
+      message: 'User left the group.'
+    }
   }
 
   if(group.group_type === GroupType.PUBLIC) {
     await this.addGroupMember( id, user_id);
-    return;
+    return {
+      message: 'Joined.'
+    };
   }
 
-  await this.prismaService.groupRequest.create({
-    data: {
-      group_id: id,
-      user_id
-    },
-  });
+
+
+  if (group.group_type === GroupType.PRIVATE) {
+    await this.prismaService.groupRequest.create({
+      data: {
+        group_id: id,
+        user_id,
+        status: 'pending'
+      }
+    })
+  }
 
   return {
     message: 'Join request sent.'
   };
 }
-
 
   async respondJoinRequest(group_id: string, request_id: string, action: 'accept' | 'reject', admin_id: string) {
     const group = await this.prismaService.group.findUnique({
@@ -194,7 +273,7 @@ export class GroupsService {
       },
     });
 
-    updateData.createMember && await this.addGroupMember(request.user_id, group_id)
+    updateData.createMember && await this.addGroupMember(group_id, request.user_id)
 
     return;
   }
@@ -273,11 +352,11 @@ export class GroupsService {
   }
 
   async addGroupMember(group_id: string, member_id: string,) {
-    this.prismaService.groupMember.create({
-      data: {
-        group_id,
-        user_id: member_id,
-      },
-    });
-  }
+      return await this.prismaService.groupMember.create({
+        data: {
+            group_id,
+            user_id: member_id
+          }
+      });
+    }
 }
