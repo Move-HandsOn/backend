@@ -39,7 +39,20 @@ export class GroupsService {
             }
           }
         },
-        groupRequests: true,
+        groupRequests: {
+          where: {
+            status: 'pending'
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          }
+        },
         members: {
           include: {
             user: {
