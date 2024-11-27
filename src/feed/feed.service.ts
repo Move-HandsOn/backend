@@ -6,22 +6,30 @@ export class FeedService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getUserFeed(userId: string) {
-    const friendsIds = await this.getFriendIds(userId);
     const groupIds = await this.getUserGroupIds(userId);
-
-    const friendPosts = await this.prismaService.post.findMany({
+    const userLiked = (likes: { user: { id: string } }[], userId: string) => {
+      return likes.some(like => like.user.id === userId);
+    };
+    const posts = await this.prismaService.post.findMany({
       where: {
-        user_id: {
-          in: friendsIds,
-        },
-        post_type: "profile",
+        post_type: 'profile',
       },
       include: {
         comments: {
           select: {
             id: true,
             comment_text: true,
-            likes: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
             created_at: true,
             user: {
               select: {
@@ -45,6 +53,7 @@ export class FeedService {
         },
         user: {
           select: {
+            id: true,
             name: true,
             profile_image: true
           }
@@ -52,7 +61,7 @@ export class FeedService {
       },
       take: 50,
       orderBy: {
-        created_at: 'asc',
+        created_at: 'desc',
       },
     });
 
@@ -62,32 +71,114 @@ export class FeedService {
           in: groupIds
         }
       },
-      include:{
+      include: {
+        comments: {
+          select: {
+            id: true,
+            comment_text: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            created_at: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          },
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        },
         user: {
           select: {
+            id: true,
+            name: true,
+            profile_image: true
+          }
+        }
+      },
+      take: 50,
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    const activities = await this.prismaService.activity.findMany({
+      where: {
+        post_type: 'profile'
+      },
+      include: {
+        comments: {
+          select: {
+            id: true,
+            comment_text: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            created_at: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          },
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
             name: true,
             profile_image: true
           }
         },
-        comments: true,
-        likes: true,
+        media: {
+          select: {
+            media_url: true,
+          }
+        }
       },
       take: 50,
       orderBy: {
-        created_at: 'asc',
-      },
-    });
-
-    const friendActivities = await this.prismaService.activity.findMany({
-      where: {
-        user_id: {
-          in: friendsIds
-        },
-        post_type: 'profile'
-      },
-      take: 50,
-      orderBy: {
-        created_at: 'asc',
+        created_at: 'desc',
       },
     });
 
@@ -97,35 +188,92 @@ export class FeedService {
           in: groupIds
         }
       },
+      include: {
+        comments: {
+          select: {
+            id: true,
+            comment_text: true,
+            likes: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            created_at: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          },
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true
+          }
+        },
+        media: {
+          select: {
+            media_url: true,
+          }
+        }
+      },
       take: 50,
       orderBy: {
-        created_at: 'asc',
+        created_at: 'desc',
       },
     });
+
+    const postsWithUserLike = posts.map(post => ({
+      ...post,
+      currentUserliked: userLiked(post.likes, userId),
+    }));
+
+    const groupPostsWithUserLike = groupPosts.map(post => ({
+      ...post,
+      currentUserliked: userLiked(post.likes, userId),
+    }));
+
+    const activitiesWithUserLike = activities.map(activity => ({
+      ...activity,
+      currentUserliked: userLiked(activity.likes, userId),
+    }));
+
+    const groupActivitiesWithUserLike = groupActivities.map(activity => ({
+      ...activity,
+      currentUserliked: userLiked(activity.likes, userId),
+    }));
 
     return {
       posts: [
-        ...friendPosts,
-        ...groupPosts,
+        ...postsWithUserLike,
+        ...groupPostsWithUserLike,
       ],
       activities: [
-        ...friendActivities,
-        ...groupActivities
+        ...activitiesWithUserLike,
+        ...groupActivitiesWithUserLike
       ]
     };
-  }
-
-  private async getFriendIds(userId: string) {
-    const friends = await this.prismaService.follower.findMany({
-      where: {
-        follower_id: userId
-      },
-      select: {
-        followed_id: true
-      },
-    });
-
-    return friends.map((f) => f.followed_id);
   }
 
   private async getUserGroupIds(userId: string) {

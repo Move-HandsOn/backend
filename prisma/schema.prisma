@@ -13,7 +13,7 @@ model User {
   name          String
   email         String  @unique
   password      String
-  profile_image String?
+  profile_image String? @default("https://nxtsdipismqpeplgkcya.supabase.co/storage/v1/object/public/move/default.jpg?t=2024-11-12T15%3A25%3A15.634Z")
   bio           String?
   gender        String?
 
@@ -35,9 +35,12 @@ model User {
   likes         Like[]
   searchFilters SearchFilter[]
 
-  updated_at DateTime @updatedAt
-  created_at DateTime @default(now())
-  Media      Media[]
+  updated_at   DateTime       @updatedAt
+  created_at   DateTime       @default(now())
+  media        Media[]
+  group        Group[]
+  notification Notification[]
+  Calendar     Calendar[]
 
   @@map("users")
 }
@@ -47,7 +50,7 @@ model UserInterest {
   category    Category @relation(fields: [category_id], references: [id])
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, category_id])
   @@map("user_interests")
@@ -86,12 +89,13 @@ model Post {
 
   comments Comment[]
   likes    Like[]
+  media    Media[]
 
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
 
   user_id  String
-  user     User    @relation(fields: [user_id], references: [id])
+  user     User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   group_id String?
   group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
 
@@ -105,8 +109,14 @@ model Media {
   activity_id String?
   activity    Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
+  group_id String?
+  group    Group?  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
   user_id String?
   user    User?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  post_id String?
+  post    Post?   @relation(fields: [post_id], references: [id], onDelete: Cascade)
 
   @@map("medias_url")
 }
@@ -117,6 +127,7 @@ model Category {
 
   activities   Activity[]
   userInterest UserInterest[]
+  Group        Group[]
 
   @@map("categories")
 }
@@ -130,12 +141,13 @@ model Comment {
 
   likes Like[]
 
-  user     User      @relation(fields: [user_id], references: [id])
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   post     Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
   activity Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
 
-  updated_at DateTime @updatedAt
-  created_at DateTime @default(now())
+  updated_at   DateTime       @updatedAt
+  created_at   DateTime       @default(now())
+  Notification Notification[]
 
   @@map("comments")
 }
@@ -147,10 +159,11 @@ model Like {
   comment_id  String?
   activity_id String?
 
-  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  comment  Comment?  @relation(fields: [comment_id], references: [id], onDelete: Cascade)
-  post     Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  activity Activity? @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  comment      Comment?       @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+  post         Post?          @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  activity     Activity?      @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+  Notification Notification[]
 
   @@unique([user_id, post_id])
   @@unique([user_id, comment_id])
@@ -165,14 +178,20 @@ model Group {
   group_image String?
   group_type  String
 
-  members    GroupMember[]
-  posts      Post[]
-  events     Event[]
-  activities Activity[]
+  category_id Int
+  category    Category @relation(fields: [category_id], references: [id])
+
+  admin_id String?
+  admin    User?   @relation(fields: [admin_id], references: [id])
+
+  members       GroupMember[]
+  posts         Post[]
+  events        Event[]
+  activities    Activity[]
+  groupRequests GroupRequest[]
+  media         Media[]
 
   created_at DateTime @default(now())
-
-  groupRequests GroupRequest[]
 
   @@map("groups")
 }
@@ -181,21 +200,21 @@ model GroupMember {
   group_id String
   user_id  String
 
-  group Group @relation(fields: [group_id], references: [id])
-  user  User  @relation(fields: [user_id], references: [id])
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([group_id, user_id])
   @@map("group_members")
 }
 
 model GroupRequest {
-  id      String @id @default(uuid())
-  groupId String
-  userId  String
-  status  String @default("pending")
+  id       String @id @default(uuid())
+  group_id String
+  user_id  String
+  status   String @default("none")
 
-  group Group @relation(fields: [groupId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("group_requests")
 }
@@ -204,8 +223,9 @@ model Follower {
   follower_id String
   followed_id String
 
-  follower User @relation("UserFollowers", fields: [follower_id], references: [id])
-  followed User @relation("UserFollowing", fields: [followed_id], references: [id])
+  follower     User           @relation("UserFollowers", fields: [follower_id], references: [id])
+  followed     User           @relation("UserFollowing", fields: [followed_id], references: [id])
+  Notification Notification[]
 
   @@id([follower_id, followed_id])
   @@map("followers")
@@ -215,11 +235,7 @@ model Event {
   id                  String   @id @default(uuid())
   name                String
   event_date          DateTime
-  address_street      String
-  address_number      String
-  address_city        String
-  address_state       String
-  address_cep         String
+  address             String
   is_recurring        Boolean  @default(false)
   recurrence_interval Int?
   start_time          DateTime
@@ -228,23 +244,59 @@ model Event {
 
   created_at DateTime @default(now())
 
-  is_public Boolean @default(false)
+  event_type String
 
   user_id  String
-  user     User    @relation(fields: [user_id], references: [id])
+  user     User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   group_id String?
-  group    Group?  @relation(fields: [group_id], references: [id])
+  group    Group?     @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  Calendar Calendar[]
 
   @@map("events")
 }
 
 model SearchFilter {
-  id         String @id @default(uuid())
-  filterName String
-  filterType String
+  id          String @id @default(uuid())
+  filter_name String
+  filter_type String
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
 
   @@map("search_filters")
+}
+
+model Notification {
+  id         String @id @default(uuid())
+  event_type String
+  message    String
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  Follower    Follower? @relation(fields: [follower_id, followed_id], references: [follower_id, followed_id], onDelete: Cascade)
+  follower_id String?
+  followed_id String?
+
+  comment_id String?
+  comment    Comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+
+  like_id String?
+  like    Like?   @relation(fields: [like_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notifications")
+}
+
+model Calendar {
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([event_id, user_id])
+  @@map("calendars")
 }

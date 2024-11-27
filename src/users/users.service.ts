@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { FileUploadDTO } from 'src/supabase/dto/upload.dto';
 import { User } from '@prisma/client';
+import { GroupType } from 'src/groups/dto/create-group.dto';
 
 @Injectable()
 export class UsersService {
@@ -59,18 +60,64 @@ export class UsersService {
         gender: true,
         activities: {
           include: {
-            media: { select: { media_url: true } },
-            comments: true,
-            likes: true,
+            media: {
+              select: {
+                media_url: true
+              }
+            },
+            comments: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            likes: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+          },
+          orderBy: {
+            created_at: 'desc'
           }
         },
         interests: true,
         posts: true,
-        groups: true,
         followers: true,
         following: true,
       },
     });
+
+    const groups = await this.prismaService.group.findMany({
+      where: {
+        OR: [
+          {
+            members: {
+              some: {
+                user_id: id
+              }
+            }
+          },
+          {
+            admin_id: id
+          },
+          {
+            group_type: GroupType.PUBLIC
+          }
+        ]
+      }
+    })
 
     if (!user) {
       return null;
@@ -78,7 +125,7 @@ export class UsersService {
 
     const followerCount = user.followers.length;
     const followingCount = user.following.length;
-    const groupCount = user.groups.length;
+    const groupCount = groups.length;
     const activityCount = user.activities.length;
 
     const { averageDaily, weeklyProgress, weekdayDuration} = this.calculateActivityStats(user.activities);
@@ -90,6 +137,7 @@ export class UsersService {
 
     return {
         ...user,
+        groups,
         activities,
         followerCount,
         followingCount,
@@ -267,6 +315,50 @@ export class UsersService {
     user.recoveryToken = null;
 
     return await this.update(user.email, { ...user, password });
+  }
+
+  async getMutualFollowers(user_id: string) {
+    const following = await this.prismaService.follower.findMany({
+      where: {
+        follower_id: user_id,
+      },
+      select: {
+        followed_id: true,
+        followed: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true,
+          }
+        }
+      },
+    });
+
+    const followers = await this.prismaService.follower.findMany({
+      where: {
+        followed_id: user_id,
+      },
+      select: {
+        follower_id: true,
+        follower: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true,
+          }
+        }
+      },
+    });
+
+    const mutualFollowers = following
+    .map((f) => f.followed)
+    .filter((followed) =>
+      followers.some((f) => f.follower.id === followed.id)
+    );
+
+    return {
+      friends: mutualFollowers
+    }
   }
 
   generateHash(password: string): string {

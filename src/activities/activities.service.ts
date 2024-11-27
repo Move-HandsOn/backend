@@ -63,11 +63,18 @@ export class ActivitiesService {
   }
 
   async findAll(userId: string) {
-    const activities = this.prismaService.activity.findMany({
+    const activities = await this.prismaService.activity.findMany({
       where: {
         user_id: userId,
       },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true
+          }
+        },
         media: {
             select: {
                 media_url: true
@@ -88,6 +95,7 @@ export class ActivitiesService {
               select: {
                 user: {
                   select: {
+                    id: true,
                     name: true,
                     profile_image: true,
                   }
@@ -100,6 +108,7 @@ export class ActivitiesService {
           select: {
             user: {
               select: {
+                id: true,
                 name: true,
                 profile_image: true,
               }
@@ -113,7 +122,12 @@ export class ActivitiesService {
       return null;
     }
 
-    return activities;
+    return activities.map(activity => {
+      return {
+        ...activity,
+        like_count: activity.likes.length ?? 0,
+      }
+    })
   }
 
   async findOne(id: string, userId: string) {
@@ -123,6 +137,13 @@ export class ActivitiesService {
         user_id: userId,
       },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true
+          }
+        },
         media: {
             select: {
                 media_url: true
@@ -135,6 +156,7 @@ export class ActivitiesService {
             created_at: true,
             user: {
               select: {
+                id: true,
                 name: true,
                 profile_image: true,
               }
@@ -143,6 +165,7 @@ export class ActivitiesService {
               select: {
                 user: {
                   select: {
+                    id: true,
                     name: true,
                     profile_image: true,
                   }
@@ -155,6 +178,7 @@ export class ActivitiesService {
           select: {
             user: {
               select: {
+                id: true,
                 name: true,
                 profile_image: true,
               }
@@ -168,7 +192,10 @@ export class ActivitiesService {
       return null;
     }
 
-    return activity;
+    return {
+      ...activity,
+      like_count: activity.likes.length ?? 0,
+    };
   }
 
   async remove(id: string, userId: string) {
