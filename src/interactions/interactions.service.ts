@@ -118,24 +118,27 @@ export class InteractionsService {
   async toggleLike(likeDto: LikeDto, user: User) {
     const { comment_id, activity_id, post_id } = likeDto;
 
-    this.validateLikeDto(comment_id, activity_id, post_id);
+  this.validateLikeDto(comment_id, activity_id, post_id);
 
-    const searchField = this.getSearchField(comment_id, activity_id, post_id, user.id);
+  const searchField = this.getSearchField(comment_id, activity_id, post_id, user.id);
 
-    const existingLike = await this.prismaService.like.findFirst({ where: searchField });
+  await this.prismaService.$transaction(async (prisma) => {
+    const existingLike = await prisma.like.findFirst({
+      where: searchField
+    });
 
     if (existingLike) {
-      await this.prismaService.like.delete({
+      await prisma.like.delete({
         where: {
-          id: existingLike.id
-        }
+          id: existingLike.id,
+        },
       });
       return;
     }
 
     const authorId = await this.getAuthorId(comment_id, activity_id);
 
-    const newLike = await this.prismaService.like.create({
+    const newLike = await prisma.like.create({
       data: {
         user_id: user.id,
         ...likeDto,
@@ -152,6 +155,7 @@ export class InteractionsService {
       },
       message,
     );
+  });
   }
 
   private validateLikeDto(comment_id: string, activity_id: string, post_id: string) {
