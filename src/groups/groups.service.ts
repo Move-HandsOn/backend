@@ -11,6 +11,62 @@ export class GroupsService {
     private readonly supabaseService: SupabaseService,
   ) {}
 
+  async groupDetail(id: string) {
+    return await this.prismaService.group.findMany({
+      where: {
+        id
+      },
+      include: {
+        events: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          }
+        },
+        activities: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true
+              }
+            }
+          }
+        },
+        groupRequests: true,
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        },
+        category: {
+          select: {
+            category_name: true
+          }
+        },
+        admin: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true,
+          }
+        }
+      }
+    })
+  }
+
   async listGroups(user_id: string) {
     const groups = await this.prismaService.group.findMany({
       include: {
