@@ -1,7 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from "bcrypt";
+import { EEventType } from '../src/events/dto/create-event.dto';
+import { toZonedTime } from 'date-fns-tz';
 
 const prisma = new PrismaClient();
+
+const timeZone = 'America/Sao_Paulo';
 
 interface CategoryCreate {
   id: number;
@@ -82,6 +86,20 @@ export interface LikeCreate {
   activity_id?: string;
   comment_id?: string;
 }
+
+export type CreateEvent = {
+  name: string;
+  event_date: string;
+  address: string;
+  is_recurring?: boolean;
+  recurrence_interval?: number;
+  start_time: string;
+  end_time: string;
+  description?: string;
+  event_type: EEventType;
+  group_id?: string;
+  user_id: string
+};
 
 const categoryList: CategoryCreate[] = [
   { id: 1, category_name: 'corrida' },
@@ -543,6 +561,104 @@ const commentLikes: LikeCreate[] = [
   }
 ];
 
+const events: CreateEvent[] = [
+  {
+    name: "Corrida Matinal no Parque",
+    event_date: toZonedTime(new Date(Date.now() - 24 * 60 * 60 * 1000), timeZone).toISOString(), // Ontem
+    address: "Parque Ibirapuera, São Paulo",
+    start_time: toZonedTime(new Date(new Date().setHours(6, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(8, 0, 0, 0)), timeZone).toISOString(),
+    description: "Encontro para corrida em grupo.",
+    event_type: EEventType.GROUP,
+    group_id: "5b4c98a7-d9b8-4b3a-90a4-8e2e4f5d6b7c",
+    user_id: "394051cf-c21f-40f1-8028-1cdf35ff6418", // Membro do grupo
+  },
+  {
+    name: "Treino Funcional na Praia",
+    event_date: toZonedTime(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // 2 dias atrás
+    address: "Praia de Copacabana, Rio de Janeiro",
+    start_time: toZonedTime(new Date(new Date().setHours(7, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(9, 0, 0, 0)), timeZone).toISOString(),
+    description: "Treino funcional ao ar livre.",
+    event_type: EEventType.PROFILE,
+    user_id: "8b2e3aad-3384-4358-99f3-e88ecf25b720", // Usuário 2
+  },
+  {
+    name: "Ciclismo na Serra",
+    event_date: toZonedTime(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // 3 dias atrás
+    address: "Serra da Mantiqueira, SP",
+    start_time: toZonedTime(new Date(new Date().setHours(8, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(12, 0, 0, 0)), timeZone).toISOString(),
+    description: "Pedalada em grupo na serra.",
+    event_type: EEventType.GROUP,
+    group_id: "7a1d63b4-c8e4-4c8b-a2b3-6e3f7b9d1c2e",
+    user_id: "8b2e3aad-3384-4358-99f3-e88ecf25b720", // Membro do grupo
+  },
+  {
+    name: "Caminhada Ecológica",
+    event_date: toZonedTime(new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // 4 dias atrás
+    address: "Floresta da Tijuca, RJ",
+    start_time: toZonedTime(new Date(new Date().setHours(9, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(12, 0, 0, 0)), timeZone).toISOString(),
+    description: "Caminhada para apreciar a natureza.",
+    event_type: EEventType.PROFILE,
+    user_id: "a5a00d08-8170-4019-848e-76679eab24c9", // Usuário 3
+  },
+  {
+    name: "Torneio de Vôlei",
+    event_date: toZonedTime(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // 5 dias atrás
+    address: "Ginásio Poliesportivo, SP",
+    start_time: toZonedTime(new Date(new Date().setHours(14, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(18, 0, 0, 0)), timeZone).toISOString(),
+    description: "Torneio de vôlei amador.",
+    event_type: EEventType.GROUP,
+    group_id: "8b2f34c5-a4d2-4c3f-91b4-d4e5f6a7b8c9",
+    user_id: "a5a00d08-8170-4019-848e-76679eab24c9", // Membro do grupo
+  },
+  {
+    name: "Yoga ao Nascer do Sol",
+    event_date: toZonedTime(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // 6 dias atrás
+    address: "Praça da Liberdade, Belo Horizonte",
+    start_time: toZonedTime(new Date(new Date().setHours(6, 30, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(8, 0, 0, 0)), timeZone).toISOString(),
+    description: "Sessão de yoga ao ar livre.",
+    event_type: EEventType.PROFILE,
+    user_id: "394051cf-c21f-40f1-8028-1cdf35ff6418", // Usuário 1
+  },
+  {
+    name: "Trilha do Pico do Jaraguá",
+    event_date: toZonedTime(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // 2 dias atrás
+    address: "Pico do Jaraguá, SP",
+    start_time: toZonedTime(new Date(new Date().setHours(8, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(11, 0, 0, 0)), timeZone).toISOString(),
+    description: "Trilha com paisagens incríveis.",
+    event_type: EEventType.GROUP,
+    group_id: "9c3e45a6-b1d2-4c4f-82a5-b3e4f5d6a7b8",
+    user_id: "394051cf-c21f-40f1-8028-1cdf35ff6418", // Membro do grupo
+  },
+  {
+    name: "Aula de Natação",
+    event_date: toZonedTime(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // Ontem
+    address: "Clube Pinheiros, São Paulo",
+    start_time: toZonedTime(new Date(new Date().setHours(18, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(19, 0, 0, 0)), timeZone).toISOString(),
+    description: "Aula de natação avançada.",
+    event_type: EEventType.PROFILE,
+    user_id: "8b2e3aad-3384-4358-99f3-e88ecf25b720", // Usuário 2
+  },
+  {
+    name: "Treino de Crossfit",
+    event_date: toZonedTime(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), timeZone).toISOString(), // 7 dias atrás
+    address: "Box Crossfit SP, São Paulo",
+    start_time: toZonedTime(new Date(new Date().setHours(7, 0, 0, 0)), timeZone).toISOString(),
+    end_time: toZonedTime(new Date(new Date().setHours(8, 30, 0, 0)), timeZone).toISOString(),
+    description: "Treino intenso para todos os níveis.",
+    event_type: EEventType.PROFILE,
+    user_id: "a5a00d08-8170-4019-848e-76679eab24c9", // Usuário 3
+  },
+];
+
+
 async function createMedia({ id, media_url, activity_id, group_id, user_id }: MediaCreate) {
   await prisma.media.create({
     data: {
@@ -779,6 +895,12 @@ async function createLike({ id, user_id, comment_id, activity_id }: LikeCreate){
   }
 }
 
+async function CreateEvent(event: CreateEvent) {
+  await prisma.event.create({
+    data: event,
+  })
+}
+
 async function main() {
   await Promise.all(categoryList.map(async (category) => {
     await createCategory(category)
@@ -818,6 +940,10 @@ async function main() {
 
   await Promise.all(commentLikes.map(async (like) => {
     await createLike(like)
+  }))
+
+  await Promise.all(events.map(async (event) => {
+    await CreateEvent(event)
   }))
 }
 
