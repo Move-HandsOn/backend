@@ -111,9 +111,6 @@ export class UsersService {
           },
           {
             admin_id: id
-          },
-          {
-            group_type: GroupType.PUBLIC
           }
         ]
       }
