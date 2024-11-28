@@ -8,8 +8,8 @@ export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Get()
-  async getUserCalendar(@GetUser() user: User, @Query('date') date?: string) {
-    return await this.calendarService.getUserCalendar(user, date)
+  async getUserCalendar(@GetUser() user: User, @Query('start_date') start_date?: string, @Query('end_date') end_date?: string) {
+    return await this.calendarService.getUserCalendar(user, start_date, end_date);
   }
 
   @Post('/:id')

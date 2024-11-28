@@ -2,18 +2,22 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class CalendarService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async getUserCalendar(user: User,  date?: string) {
+  async getUserCalendar(user: User,  start_date?: string, end_date?: string) {
     const filterQueries = {
       withDate: async () => this.prismaService.calendar.findMany({
         where: {
           user_id: user.id,
           event: {
-            event_date: new Date(date),
+            event_date: {
+              gte: toZonedTime(new Date(start_date), 'America/Sao_Paulo'),
+              lte: toZonedTime(new Date(end_date), 'America/Sao_Paulo')
+            }
           }
         },
         select: {
@@ -64,7 +68,7 @@ export class CalendarService {
       })
     };
 
-    const calendarData = date
+    const calendarData = (start_date || end_date)
       ? await filterQueries.withDate()
       : await filterQueries.withoutDate();
 

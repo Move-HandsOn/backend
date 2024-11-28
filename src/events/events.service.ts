@@ -3,6 +3,7 @@ import { CreateEventDto, EEventType } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class EventsService {
@@ -16,6 +17,9 @@ export class EventsService {
         data: {
           ...createEventDto,
           user_id: user.id,
+          event_date: toZonedTime(new Date(createEventDto.event_date), 'America/Sao_Paulo'),
+          end_time: toZonedTime(new Date(createEventDto.end_time), 'America/Sao_Paulo'),
+          start_time: toZonedTime(new Date(createEventDto.start_time), 'America/Sao_Paulo'),
         },
       });
 
