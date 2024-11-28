@@ -23,6 +23,29 @@ export class InteractionsService {
       data: {
         ...commentDto,
         user_id: user.id
+      },
+      select: {
+        id: true,
+        comment_text: true,
+        created_at: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true,
+          }
+        },
+        likes: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_image: true,
+              }
+            }
+          }
+        }
       }
     });
 
