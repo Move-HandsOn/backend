@@ -658,10 +658,11 @@ const events: CreateEvent[] = [
   },
 ];
 
-
 async function createMedia({ id, media_url, activity_id, group_id, user_id }: MediaCreate) {
-  await prisma.media.create({
-    data: {
+  await prisma.media.upsert({
+    where: { id },
+    update: {},
+    create: {
       id,
       media_url,
       activity_id,
@@ -745,8 +746,15 @@ async function addUserGroup({ group_id, user_id }: GroupMemberCreate) {
 }
 
 async function followUser({ follower_id, followed_id }: FollowerCreate) {
-  const follow = await prisma.follower.create({
-    data: {
+  const follow = await prisma.follower.upsert({
+    where: {
+      follower_id_followed_id: {
+        followed_id,
+        follower_id
+      }
+    },
+    update: {},
+    create: {
       follower_id,
       followed_id,
     },
@@ -773,8 +781,10 @@ async function followUser({ follower_id, followed_id }: FollowerCreate) {
 }
 
 async function createActivity({ id, description, duration, activity_date, category_id, post_type, user_id, group_id, createdAt }: ActivityCreate) {
-  await prisma.activity.create({
-    data: {
+  await prisma.activity.upsert({
+    where: { id },
+    update: {},
+    create: {
       id,
       description,
       duration,
@@ -789,8 +799,10 @@ async function createActivity({ id, description, duration, activity_date, catego
 }
 
 async function createComment({ id, user_id, activity_id, comment_text, created_at }: CommentCreate) {
-  const comment = await prisma.comment.create({
-    data: {
+  const comment = await prisma.comment.upsert({
+    where: { id },
+    update: {},
+    create: {
       id,
       comment_text,
       user_id,
@@ -826,8 +838,10 @@ async function createComment({ id, user_id, activity_id, comment_text, created_a
 }
 
 async function createLike({ id, user_id, comment_id, activity_id }: LikeCreate){
-  const like = await prisma.like.create({
-    data: {
+  const like = await prisma.like.upsert({
+    where: { id },
+    update: {},
+    create: {
       id,
       user_id,
       comment_id,
@@ -895,9 +909,12 @@ async function createLike({ id, user_id, comment_id, activity_id }: LikeCreate){
   }
 }
 
-async function CreateEvent(event: CreateEvent) {
+async function createEvent(event: CreateEvent) {
   await prisma.event.create({
-    data: event,
+    data: {
+      ...event,
+    created_at: new Date(),
+    },
   })
 }
 
@@ -943,7 +960,7 @@ async function main() {
   }))
 
   await Promise.all(events.map(async (event) => {
-    await CreateEvent(event)
+    await createEvent(event)
   }))
 }
 
