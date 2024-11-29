@@ -15,6 +15,8 @@ export class NotificationsService {
           event_type: event.event_type,
           followed_id: event.followed_id,
           follower_id: event.follower_id,
+          comment_id: event.comment_id,
+          like_id: event.like_id,
           message,
         },
       });
