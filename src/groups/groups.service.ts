@@ -30,6 +30,46 @@ export class GroupsService {
         },
         activities: {
           include: {
+              likes: {
+                select: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      profile_image: true
+                    }
+                  }
+                }
+              },
+              comments: {
+                select: {
+                  comment_text: true,
+                  created_at: true,
+                  likes: {
+                    include: {
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          profile_image: true
+                        }
+                      }
+                    }
+                  },
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      profile_image: true
+                    }
+                  }
+                }
+              },
+              media: {
+                select: {
+                  media_url: true,
+                }
+            },
             user: {
               select: {
                 id: true,
