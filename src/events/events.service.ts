@@ -17,6 +17,15 @@ export class EventsService {
           ...createEventDto,
           user_id: user.id,
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              profile_image: true,
+            }
+          }
+        }
       });
 
       await prisma.calendar.create({
