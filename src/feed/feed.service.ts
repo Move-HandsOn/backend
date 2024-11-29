@@ -299,6 +299,9 @@ export class FeedService {
             contains: text,
             mode: 'insensitive',
           },
+          NOT: {
+            id: userId
+          }
         },
         select: {
           id: true,
