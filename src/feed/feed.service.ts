@@ -124,7 +124,14 @@ export class FeedService {
 
     const activities = await this.prismaService.activity.findMany({
       where: {
-        post_type: 'profile'
+        OR: [
+          {
+            post_type: 'profile'
+          },
+          {
+            user_id: userId
+          }
+        ]
       },
       include: {
         comments: {
