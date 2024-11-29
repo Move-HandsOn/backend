@@ -61,10 +61,8 @@ export class InteractionsService {
         }
       }
     })
-    console.log(comment);
 
-
-    const notification = await this.notificationsService.createNotification(
+    await this.notificationsService.createNotification(
       {
         user_id: author.id,
         event_type: NotificationEventType.COMMENT_ON_ACTIVITY,
@@ -72,8 +70,6 @@ export class InteractionsService {
       },
       `${user.name} comentou na sua atividade.`,
     )
-
-    console.log(notification);
 
     return comment;
   }
