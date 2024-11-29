@@ -26,6 +26,7 @@ export class ActivitiesService {
     }
 
     const activityData = {
+      ...createActivityDto,
       post_type: createActivityDto.post_type,
       duration: +createActivityDto.duration,
       activity_date: new Date(createActivityDto.activity_date),
