@@ -26,13 +26,13 @@ export class ActivitiesService {
     }
 
     const activityData = {
-      ...createActivityDto,
       post_type: createActivityDto.post_type,
       duration: +createActivityDto.duration,
       activity_date: new Date(createActivityDto.activity_date),
       description: createActivityDto.description,
       user_id: userId,
       category_id: category.id,
+      group_id: createActivityDto.group_id
     };
 
     const activity = await this.prismaService.$transaction(async (prisma) => {
